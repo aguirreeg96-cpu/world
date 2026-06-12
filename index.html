@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mundial Stats — Análisis Estadístico</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+  <!-- ── Header ─────────────────────────────────────────────── -->
+  <header class="header">
+    <div class="header__inner">
+      <div class="header__logo">
+        <span class="header__icon">⚽</span>
+        <div>
+          <h1 class="header__title">Mundial Stats</h1>
+          <p class="header__sub">Análisis estadístico · No es predicción</p>
+        </div>
+      </div>
+      <span class="badge badge--warn">Solo análisis estadístico · Sin fines de apuesta</span>
+    </div>
+  </header>
+
+  <main class="main">
+
+    <!-- ── Team Selector ──────────────────────────────────────── -->
+    <section class="card selector-card">
+      <h2 class="section-title">Seleccionar Partido</h2>
+
+      <div class="team-selector">
+        <div class="team-picker">
+          <label class="picker-label" for="teamA">Equipo A</label>
+          <select id="teamA" class="picker-select"></select>
+          <div id="previewA" class="team-preview-slot"></div>
+        </div>
+
+        <div class="vs-divider">VS</div>
+
+        <div class="team-picker">
+          <label class="picker-label" for="teamB">Equipo B</label>
+          <select id="teamB" class="picker-select"></select>
+          <div id="previewB" class="team-preview-slot"></div>
+        </div>
+      </div>
+
+      <button class="btn-analyze" id="btnAnalyze" disabled>
+        Analizar Partido
+      </button>
+    </section>
+
+    <!-- ── Results ────────────────────────────────────────────── -->
+    <section id="resultsSection" style="display:none">
+
+      <!-- match header -->
+      <div class="card match-header-card">
+        <div class="match-teams" id="matchTitle"></div>
+        <div class="match-meta">
+          <span class="badge badge--info">Campo Neutral</span>
+          <span class="badge badge--neutral" id="matchDate"></span>
+        </div>
+      </div>
+
+      <!-- probability cards -->
+      <div class="prob-grid">
+        <div class="prob-card card" id="probA">
+          <div class="prob-card__label" id="labelA"></div>
+          <div class="prob-card__value" id="valueA"></div>
+          <div class="prob-track"><div class="prob-fill" id="barA"></div></div>
+          <div class="prob-card__tag">Victoria</div>
+        </div>
+        <div class="prob-card card" id="probDraw">
+          <div class="prob-card__label" id="labelDraw"></div>
+          <div class="prob-card__value" id="valueDraw"></div>
+          <div class="prob-track"><div class="prob-fill prob-fill--draw" id="barDraw"></div></div>
+          <div class="prob-card__tag">Empate</div>
+        </div>
+        <div class="prob-card card" id="probB">
+          <div class="prob-card__label" id="labelB"></div>
+          <div class="prob-card__value" id="valueB"></div>
+          <div class="prob-track"><div class="prob-fill prob-fill--b" id="barB"></div></div>
+          <div class="prob-card__tag">Victoria</div>
+        </div>
+      </div>
+
+      <!-- stats strip -->
+      <div class="stats-grid">
+        <div class="card stats-card">
+          <h3 class="card-title">Goles Esperados</h3>
+          <div id="goalsComparison"></div>
+        </div>
+        <div class="card stats-card">
+          <h3 class="card-title">Rating ELO</h3>
+          <div id="eloComparison"></div>
+        </div>
+        <div class="card stats-card">
+          <h3 class="card-title">Forma Reciente</h3>
+          <div id="formComparison"></div>
+        </div>
+      </div>
+
+      <!-- score distribution -->
+      <div class="card">
+        <h3 class="card-title">Marcadores Más Probables</h3>
+        <p class="card-subtitle">Los 12 marcadores con mayor probabilidad según el modelo Poisson</p>
+        <div class="scores-grid" id="scoresGrid"></div>
+      </div>
+
+      <!-- methodology accordion -->
+      <div class="card methodology-card">
+        <button class="meth-toggle" id="methodologyToggle">
+          <span>🔍 Panel de Transparencia — Cómo se calculó este análisis</span>
+          <span class="toggle-icon">▼</span>
+        </button>
+        <div id="methodologyBody" style="display:none">
+          <div id="methodologyContent" class="meth-body"></div>
+        </div>
+      </div>
+
+      <!-- disclaimer -->
+      <div class="disclaimer">
+        <p>
+          <strong>⚠ Aviso importante:</strong> Este análisis es una estimación estadística
+          basada en modelos matemáticos y datos históricos de demostración.
+          <strong>No predice el futuro ni garantiza ningún resultado.</strong>
+          No debe usarse como base para apuestas ni decisiones financieras.
+          El fútbol involucra factores impredecibles que ningún modelo puede capturar completamente.
+        </p>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <p>Mundial Stats · Modelos: ELO + Poisson + Forma reciente · Datos de demostración</p>
+  </footer>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
