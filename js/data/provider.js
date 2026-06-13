@@ -19,7 +19,7 @@ import * as apiAdapter  from "./adapters/apiAdapter.js";
 // ── Configuración ─────────────────────────────────────────────────────────────
 
 /** Cambiar a "api" para usar el backend proxy con fallback automático al mock. */
-export const DATA_SOURCE = "mock";
+export const DATA_SOURCE = "api";
 
 const adapter = DATA_SOURCE === "api" ? apiAdapter : mockAdapter;
 
