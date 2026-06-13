@@ -687,6 +687,204 @@ code {
   color: var(--text-faint);
 }
 
+/* ── Odds Comparator ─────────────────────────────────────────────────────────── */
+.odds-inputs-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr auto;
+  gap: 12px;
+  align-items: end;
+}
+
+.odds-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.odds-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.odds-input {
+  background: var(--surface-alt);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  font-size: 18px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  text-align: center;
+  width: 100%;
+  transition: border-color var(--transition);
+}
+
+.odds-input:focus {
+  outline: none;
+  border-color: var(--border-focus);
+}
+
+.odds-input::placeholder {
+  color: var(--text-faint);
+  font-weight: 400;
+  font-size: 13px;
+  font-family: var(--font);
+}
+
+.odds-input::-webkit-inner-spin-button,
+.odds-input::-webkit-outer-spin-button { -webkit-appearance: none; }
+.odds-input[type=number] { -moz-appearance: textfield; }
+
+.btn-compare {
+  padding: 10px 20px;
+  background: var(--blue-dim);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 700;
+  font-family: var(--font);
+  cursor: pointer;
+  transition: background var(--transition);
+  white-space: nowrap;
+}
+
+.btn-compare:hover:not(:disabled) { background: var(--blue); }
+.btn-compare:disabled { background: var(--text-faint); cursor: not-allowed; }
+
+/* ── Odds result table ───────────────────────────────────────────────────────── */
+.odds-result {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+.odds-overround {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+}
+
+.odds-overround strong { color: var(--yellow-light); }
+
+.odds-or-note {
+  font-size: 12px;
+  color: var(--text-faint);
+}
+
+/* Grid table — all cells are direct children (no wrapper rows) */
+.oct-grid {
+  display: grid;
+  grid-template-columns: 140px repeat(3, 1fr);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.oct-cell {
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--border);
+  border-right:  1px solid var(--border);
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+}
+
+/* Remove right border on last column */
+.oct-cell:nth-child(4n) { border-right: none; }
+
+/* Remove bottom border on last row (6 rows × 4 cols = 24 cells) */
+.oct-cell:nth-last-child(-n+4) { border-bottom: none; }
+
+.oct-cell--meta {
+  background: var(--surface-alt);
+}
+
+.oct-cell--head {
+  background: var(--surface-alt);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  justify-content: center;
+}
+
+.oct-cell--label {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.oct-cell--num {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  justify-content: center;
+  text-align: center;
+}
+
+.oct-cell--model { color: var(--blue); font-weight: 700; }
+
+/* Edge indicator inside table */
+.odc-edge {
+  font-weight: 700;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.odc-edge--positive { color: var(--green); }
+.odc-edge--neutral  { color: var(--text-muted); }
+.odc-edge--negative { color: var(--red); }
+
+/* Summary badges */
+.odds-edge-labels {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.odds-edge-badge {
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  font-weight: 600;
+  text-align: center;
+  line-height: 1.4;
+  letter-spacing: 0.02em;
+}
+
+.odds-edge-badge--positive {
+  background: rgba(63, 185, 80, 0.12);
+  color: var(--green);
+  border: 1px solid rgba(63, 185, 80, 0.3);
+}
+
+.odds-edge-badge--neutral {
+  background: rgba(139, 148, 158, 0.08);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+}
+
+.odds-edge-badge--negative {
+  background: rgba(248, 81, 73, 0.08);
+  color: #ffa6a0;
+  border: 1px solid rgba(248, 81, 73, 0.2);
+}
+
+.odds-disclaimer {
+  font-size: 11px;
+  color: var(--text-faint);
+  line-height: 1.6;
+}
+
 /* ── Responsive ──────────────────────────────────────────────────────────────── */
 @media (max-width: 700px) {
   .team-selector {
@@ -727,8 +925,24 @@ code {
   .metrics-grid {
     grid-template-columns: repeat(2, 1fr);
   }
+
+  .odds-inputs-row {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .oct-grid {
+    grid-template-columns: 100px repeat(3, 1fr);
+  }
+
+  .oct-cell { font-size: 12px; padding: 8px 8px; }
+  .oct-cell--head { font-size: 10px; }
+
+  .odds-edge-labels {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 400px) {
   .scores-grid { grid-template-columns: repeat(2, 1fr); }
+  .odds-inputs-row { grid-template-columns: 1fr; }
 }

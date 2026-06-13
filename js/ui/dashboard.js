@@ -294,6 +294,104 @@ function renderMethodology(teamA, teamB, result) {
     </div>`;
 }
 
+// ── Odds Comparator ───────────────────────────────────────────────────────────
+
+/**
+ * Muestra la tarjeta del comparador de cuotas y actualiza las etiquetas
+ * con los nombres de los equipos del partido actual. Resetea el estado.
+ */
+export function showOddsComparator(teamA, teamB) {
+  $("oddsLabelA").textContent   = `Victoria ${teamA.name}`;
+  $("oddsLabelB").textContent   = `Victoria ${teamB.name}`;
+  $("oddsInputA").value         = "";
+  $("oddsInputDraw").value      = "";
+  $("oddsInputB").value         = "";
+  $("oddsResult").style.display = "none";
+  $("btnCompare").disabled      = true;
+  $("oddsCard").style.display   = "block";
+}
+
+/**
+ * Renderiza la tabla de comparación cuotas vs modelo.
+ *
+ * @param {object} teamA
+ * @param {object} teamB
+ * @param {{ probA, probDraw, probB }} modelProbs  — probabilidades del modelo
+ * @param {object} analysis  — resultado de analyzeOdds()
+ */
+export function renderOddsComparison(teamA, teamB, modelProbs, analysis) {
+  const pp   = n => `${n >= 0 ? "+" : ""}${(n * 100).toFixed(1)}pp`;
+  const pct1 = n => `${(n * 100).toFixed(1)}%`;
+
+  const edgeCls   = e => e > 0.03 ? "positive" : e < -0.03 ? "negative" : "neutral";
+  const edgeLabel = e =>
+    e > 0.03   ? "Diferencia estadística positiva"
+    : e < -0.03 ? "Sin ventaja estadística del modelo"
+    :             "Diferencia estadística marginal";
+
+  const { odds, implied, normalized, edge, overround } = analysis;
+
+  // ── Celdas de datos ────────────────────────────────────────────────────────
+  const num = val => `<div class="oct-cell oct-cell--num">${val}</div>`;
+
+  const rowOdds     = [odds.A,         odds.draw,         odds.B        ].map(v => num(v.toFixed(2))).join("");
+  const rowImplied  = [implied.A,      implied.draw,      implied.B     ].map(v => num(pct1(v))).join("");
+  const rowNorm     = [normalized.A,   normalized.draw,   normalized.B  ].map(v => num(pct1(v))).join("");
+  const rowModel    = [modelProbs.probA, modelProbs.probDraw, modelProbs.probB]
+    .map(v => `<div class="oct-cell oct-cell--num oct-cell--model">${pct1(v)}</div>`).join("");
+  const rowEdge     = [edge.A, edge.draw, edge.B]
+    .map(e => `<div class="oct-cell oct-cell--num"><span class="odc-edge odc-edge--${edgeCls(e)}">${pp(e)}</span></div>`).join("");
+
+  // ── Badges resumen ─────────────────────────────────────────────────────────
+  const badges = [
+    { name: teamA.name,  e: edge.A    },
+    { name: "Empate",    e: edge.draw },
+    { name: teamB.name,  e: edge.B    },
+  ].map(({ name, e }) =>
+    `<div class="odds-edge-badge odds-edge-badge--${edgeCls(e)}">${name}: ${edgeLabel(e)}</div>`
+  ).join("");
+
+  $("oddsResult").innerHTML = `
+    <div class="odds-result">
+      <p class="odds-overround">
+        Margen de la casa: <strong>${(overround * 100).toFixed(1)}%</strong>
+        <span class="odds-or-note"> (suma de probabilidades implícitas − 1)</span>
+      </p>
+
+      <div class="oct-grid">
+        <div class="oct-cell oct-cell--meta"></div>
+        <div class="oct-cell oct-cell--head">Victoria ${teamA.name}</div>
+        <div class="oct-cell oct-cell--head">Empate</div>
+        <div class="oct-cell oct-cell--head">Victoria ${teamB.name}</div>
+
+        <div class="oct-cell oct-cell--label">Cuota decimal</div>
+        ${rowOdds}
+
+        <div class="oct-cell oct-cell--label">Impl. bruta</div>
+        ${rowImplied}
+
+        <div class="oct-cell oct-cell--label">Sin margen</div>
+        ${rowNorm}
+
+        <div class="oct-cell oct-cell--label">Modelo</div>
+        ${rowModel}
+
+        <div class="oct-cell oct-cell--label">Diferencia</div>
+        ${rowEdge}
+      </div>
+
+      <div class="odds-edge-labels">${badges}</div>
+
+      <p class="odds-disclaimer">
+        ⚠ Comparación estadística exclusivamente educativa. La diferencia entre el modelo
+        y el mercado no implica valor esperado real, ventaja garantizada ni recomendación
+        de ningún tipo. Los modelos matemáticos no predicen resultados individuales.
+      </p>
+    </div>`;
+
+  $("oddsResult").style.display = "block";
+}
+
 // ── Animaciones ───────────────────────────────────────────────────────────────
 
 function animateFills() {
