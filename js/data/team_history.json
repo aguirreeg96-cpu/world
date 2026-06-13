@@ -1,0 +1,487 @@
+{
+  "generatedAt": "2026-06-13T06:17:58Z",
+  "sourceDataset": "martj42/international_results",
+  "window": "last 20 matches (competitive priority) since 2022-01-01",
+  "teams": {
+    "ARG": {
+      "avgGoalsFor": 1.65,
+      "avgGoalsAgainst": 0.55,
+      "recentResults": [
+        "L",
+        "W",
+        "D",
+        "W",
+        "W",
+        "W",
+        "W",
+        "L",
+        "W",
+        "D"
+      ],
+      "wins": 13,
+      "draws": 3,
+      "losses": 4,
+      "matchesUsed": 20,
+      "dateRange": {
+        "from": "2023-11-16",
+        "to": "2025-09-09"
+      }
+    },
+    "AUS": {
+      "avgGoalsFor": 2.15,
+      "avgGoalsAgainst": 0.55,
+      "recentResults": [
+        "W",
+        "W",
+        "W",
+        "W",
+        "W",
+        "W",
+        "D",
+        "D",
+        "D",
+        "W"
+      ],
+      "wins": 13,
+      "draws": 5,
+      "losses": 2,
+      "matchesUsed": 20,
+      "dateRange": {
+        "from": "2024-01-18",
+        "to": "2026-03-31"
+      }
+    },
+    "BEL": {
+      "avgGoalsFor": 2.05,
+      "avgGoalsAgainst": 1.05,
+      "recentResults": [
+        "W",
+        "D",
+        "W",
+        "D",
+        "W",
+        "W",
+        "W",
+        "D",
+        "W",
+        "L"
+      ],
+      "wins": 8,
+      "draws": 5,
+      "losses": 7,
+      "matchesUsed": 20,
+      "dateRange": {
+        "from": "2024-06-17",
+        "to": "2025-11-18"
+      }
+    },
+    "BRA": {
+      "avgGoalsFor": 1.15,
+      "avgGoalsAgainst": 0.9,
+      "recentResults": [
+        "L",
+        "W",
+        "W",
+        "D",
+        "L",
+        "W",
+        "D",
+        "D",
+        "W",
+        "W"
+      ],
+      "wins": 7,
+      "draws": 7,
+      "losses": 6,
+      "matchesUsed": 20,
+      "dateRange": {
+        "from": "2023-10-12",
+        "to": "2025-09-09"
+      }
+    },
+    "CRO": {
+      "avgGoalsFor": 2.15,
+      "avgGoalsAgainst": 1.1,
+      "recentResults": [
+        "W",
+        "W",
+        "W",
+        "D",
+        "W",
+        "W",
+        "W",
+        "W",
+        "L",
+        "W"
+      ],
+      "wins": 11,
+      "draws": 5,
+      "losses": 4,
+      "matchesUsed": 20,
+      "dateRange": {
+        "from": "2024-03-26",
+        "to": "2025-11-17"
+      }
+    },
+    "ENG": {
+      "avgGoalsFor": 2.25,
+      "avgGoalsAgainst": 0.45,
+      "recentResults": [
+        "W",
+        "W",
+        "W",
+        "W",
+        "W",
+        "W",
+        "W",
+        "W",
+        "W",
+        "W"
+      ],
+      "wins": 15,
+      "draws": 3,
+      "losses": 2,
+      "matchesUsed": 20,
+      "dateRange": {
+        "from": "2024-06-20",
+        "to": "2025-11-16"
+      }
+    },
+    "ESP": {
+      "avgGoalsFor": 2.8,
+      "avgGoalsAgainst": 1.05,
+      "recentResults": [
+        "D",
+        "W",
+        "W",
+        "W",
+        "W",
+        "W",
+        "D",
+        "W",
+        "D",
+        "D"
+      ],
+      "wins": 15,
+      "draws": 5,
+      "losses": 0,
+      "matchesUsed": 20,
+      "dateRange": {
+        "from": "2024-06-30",
+        "to": "2025-11-18"
+      }
+    },
+    "FRA": {
+      "avgGoalsFor": 1.95,
+      "avgGoalsAgainst": 1.0,
+      "recentResults": [
+        "W",
+        "W",
+        "D",
+        "W",
+        "W",
+        "W",
+        "W",
+        "L",
+        "W",
+        "L"
+      ],
+      "wins": 12,
+      "draws": 4,
+      "losses": 4,
+      "matchesUsed": 20,
+      "dateRange": {
+        "from": "2024-06-25",
+        "to": "2025-11-16"
+      }
+    },
+    "GER": {
+      "avgGoalsFor": 2.3,
+      "avgGoalsAgainst": 0.9,
+      "recentResults": [
+        "W",
+        "W",
+        "W",
+        "W",
+        "W",
+        "L",
+        "L",
+        "L",
+        "D",
+        "W"
+      ],
+      "wins": 12,
+      "draws": 4,
+      "losses": 4,
+      "matchesUsed": 20,
+      "dateRange": {
+        "from": "2024-06-19",
+        "to": "2025-11-17"
+      }
+    },
+    "ITA": {
+      "avgGoalsFor": 2.1,
+      "avgGoalsAgainst": 1.45,
+      "recentResults": [
+        "D",
+        "W",
+        "L",
+        "W",
+        "W",
+        "W",
+        "W",
+        "W",
+        "W",
+        "L"
+      ],
+      "wins": 11,
+      "draws": 4,
+      "losses": 5,
+      "matchesUsed": 20,
+      "dateRange": {
+        "from": "2024-06-24",
+        "to": "2026-03-31"
+      }
+    },
+    "JPN": {
+      "avgGoalsFor": 3.15,
+      "avgGoalsAgainst": 0.55,
+      "recentResults": [
+        "W",
+        "L",
+        "D",
+        "W",
+        "W",
+        "W",
+        "D",
+        "W",
+        "W",
+        "W"
+      ],
+      "wins": 15,
+      "draws": 2,
+      "losses": 3,
+      "matchesUsed": 20,
+      "dateRange": {
+        "from": "2023-11-16",
+        "to": "2025-06-10"
+      }
+    },
+    "KOR": {
+      "avgGoalsFor": 2.1,
+      "avgGoalsAgainst": 0.9,
+      "recentResults": [
+        "W",
+        "W",
+        "W",
+        "D",
+        "D",
+        "D",
+        "W",
+        "W",
+        "W",
+        "W"
+      ],
+      "wins": 11,
+      "draws": 8,
+      "losses": 1,
+      "matchesUsed": 20,
+      "dateRange": {
+        "from": "2024-01-20",
+        "to": "2026-06-11"
+      }
+    },
+    "MAR": {
+      "avgGoalsFor": 2.9,
+      "avgGoalsAgainst": 0.25,
+      "recentResults": [
+        "W",
+        "D",
+        "W",
+        "W",
+        "W",
+        "D",
+        "W",
+        "W",
+        "W",
+        "W"
+      ],
+      "wins": 18,
+      "draws": 2,
+      "losses": 0,
+      "matchesUsed": 20,
+      "dateRange": {
+        "from": "2024-06-07",
+        "to": "2026-01-18"
+      }
+    },
+    "MEX": {
+      "avgGoalsFor": 1.5,
+      "avgGoalsAgainst": 0.55,
+      "recentResults": [
+        "W",
+        "W",
+        "W",
+        "W",
+        "D",
+        "W",
+        "W",
+        "W",
+        "W",
+        "W"
+      ],
+      "wins": 14,
+      "draws": 2,
+      "losses": 4,
+      "matchesUsed": 20,
+      "dateRange": {
+        "from": "2023-07-12",
+        "to": "2026-06-11"
+      }
+    },
+    "NED": {
+      "avgGoalsFor": 2.65,
+      "avgGoalsAgainst": 1.1,
+      "recentResults": [
+        "W",
+        "D",
+        "W",
+        "W",
+        "W",
+        "D",
+        "W",
+        "W",
+        "D",
+        "D"
+      ],
+      "wins": 10,
+      "draws": 7,
+      "losses": 3,
+      "matchesUsed": 20,
+      "dateRange": {
+        "from": "2024-06-25",
+        "to": "2025-11-17"
+      }
+    },
+    "NGA": {
+      "avgGoalsFor": 1.8,
+      "avgGoalsAgainst": 0.6,
+      "recentResults": [
+        "D",
+        "D",
+        "W",
+        "W",
+        "W",
+        "W",
+        "W",
+        "D",
+        "W",
+        "W"
+      ],
+      "wins": 12,
+      "draws": 7,
+      "losses": 1,
+      "matchesUsed": 20,
+      "dateRange": {
+        "from": "2024-09-07",
+        "to": "2026-01-17"
+      }
+    },
+    "POR": {
+      "avgGoalsFor": 2.25,
+      "avgGoalsAgainst": 1.0,
+      "recentResults": [
+        "W",
+        "L",
+        "D",
+        "W",
+        "W",
+        "W",
+        "D",
+        "W",
+        "W",
+        "L"
+      ],
+      "wins": 11,
+      "draws": 6,
+      "losses": 3,
+      "matchesUsed": 20,
+      "dateRange": {
+        "from": "2024-06-22",
+        "to": "2025-11-16"
+      }
+    },
+    "SEN": {
+      "avgGoalsFor": 1.95,
+      "avgGoalsAgainst": 0.4,
+      "recentResults": [
+        "L",
+        "W",
+        "W",
+        "W",
+        "W",
+        "D",
+        "W",
+        "W",
+        "W",
+        "W"
+      ],
+      "wins": 16,
+      "draws": 3,
+      "losses": 1,
+      "matchesUsed": 20,
+      "dateRange": {
+        "from": "2024-06-09",
+        "to": "2026-01-18"
+      }
+    },
+    "URU": {
+      "avgGoalsFor": 1.25,
+      "avgGoalsAgainst": 0.55,
+      "recentResults": [
+        "D",
+        "W",
+        "W",
+        "L",
+        "D",
+        "L",
+        "D",
+        "W",
+        "D",
+        "L"
+      ],
+      "wins": 8,
+      "draws": 8,
+      "losses": 4,
+      "matchesUsed": 20,
+      "dateRange": {
+        "from": "2023-11-16",
+        "to": "2025-09-09"
+      }
+    },
+    "USA": {
+      "avgGoalsFor": 2.0,
+      "avgGoalsAgainst": 1.0,
+      "recentResults": [
+        "L",
+        "W",
+        "D",
+        "W",
+        "W",
+        "W",
+        "L",
+        "L",
+        "W",
+        "W"
+      ],
+      "wins": 11,
+      "draws": 3,
+      "losses": 6,
+      "matchesUsed": 20,
+      "dateRange": {
+        "from": "2023-07-02",
+        "to": "2025-07-06"
+      }
+    }
+  }
+}

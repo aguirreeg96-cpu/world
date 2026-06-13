@@ -5,14 +5,21 @@
  *
  * ── Recursos ─────────────────────────────────────────────────────────────────
  *
- *   ?resource=teams          → 32 selecciones del WC 2022 enriquecidas
+ *   ?resource=teams          → 20 selecciones con estadísticas históricas
  *   ?resource=matches        → 64 partidos reales del WC 2022 (OpenFootball)
  *   ?resource=team&id=ARG    → un equipo por TLA
  *
  * ── Fuentes de datos ─────────────────────────────────────────────────────────
  *
- *   Partidos históricos (WC 2022):
- *     js/data/worldcup_2022.json   ← OpenFootball, datos abiertos, sin key
+ *   Historial por selección (team_history.json, generado offline):
+ *     netlify/functions/data/team_history.json
+ *     Origen: martj42/international_results (GitHub, dominio público)
+ *     20 partidos competitivos por selección (2022-presente)
+ *     Cubre: WC 2026 qualifiers, Copa América 2024, UEFA Euro 2024,
+ *            UEFA Nations League, AFC Asian Cup, Gold Cup, AFCON...
+ *
+ *   Partidos históricos para backtesting (WC 2022):
+ *     netlify/functions/data/wc2022.json
  *     Source: https://github.com/openfootball/worldcup.json
  *     64 partidos · 32 selecciones · marcadores reales a 90 min
  *
@@ -23,14 +30,17 @@
  *
  * ── Qué provee cada fuente ────────────────────────────────────────────────────
  *
- *   OpenFootball (local, sin API):
- *     ✅ avgGoalsFor / avgGoalsAgainst  (WC 2022 reales, los 32 equipos)
- *     ✅ recentResults WC 2022          (fallback si TSDB falla)
- *     ✅ globalAvgGoals = 1.312         (168 goles / 64 partidos / 2 = 1.312)
- *     ✅ resource=matches               (los 64 partidos del torneo)
+ *   team_history.json (local, sin API — fuente principal):
+ *     ✅ avgGoalsFor / avgGoalsAgainst  (últimos 20 partidos competitivos reales)
+ *     ✅ recentResults                  (últimos 10 partidos)
+ *     ✅ wins / draws / losses
  *
- *   TheSportsDB (enriquecimiento):
- *     ✅ recentResults actuales         (últimos 5 partidos, más relevantes que WC 2022)
+ *   TheSportsDB (enriquecimiento opcional):
+ *     ✅ recentResults aún más recientes (últimos 5, override si disponibles)
+ *
+ *   OpenFootball WC 2022 (local, sin API):
+ *     ✅ resource=matches               (los 64 partidos del torneo)
+ *     ✅ globalAvgGoals = 1.312         (referencia para el modelo Poisson)
  *
  *   Tablas estáticas (en este archivo):
  *     • ELO_TABLE          → eloratings.net (actualizar manualmente)
@@ -40,12 +50,10 @@
  *
  * ── Cómo configurar ──────────────────────────────────────────────────────────
  *
- *   Para forma reciente real (recomendado para producción):
- *     Netlify UI → Site settings → Environment variables
- *     THESPORTSDB_API_KEY = <clave de thesportsdb.com/login.php>
- *     Sin clave: usa key demo "123" (rate-limited) o recentResults del WC 2022
- *
  *   JAMÁS escribir la clave en este archivo ni en ningún archivo del repo.
+ *
+ *   THESPORTSDB_API_KEY: opcional (enriquecimiento forma reciente)
+ *   Sin clave: usa demo "123" para dev o team_history.json como fallback
  *
  * ── Modos legacy ─────────────────────────────────────────────────────────────
  *
@@ -68,17 +76,24 @@ const TSDB_DEMO = "123"; // Demo key — rate-limited. En prod usar THESPORTSDB_
 const AF_BASE = "https://v3.football.api-sports.io"; // legacy
 const FD_BASE = "https://api.football-data.org/v4";  // legacy
 
-// ── Carga de datos locales (OpenFootball WC 2022) ─────────────────────────────
-// El JSON vive en netlify/functions/data/wc2022.json (dentro del directorio de
-// funciones) para garantizar que esbuild lo incluya en el bundle.
-// IMPORTANTE: require() debe usar una ruta ESTÁTICA (sin path.join / __dirname
-// dinámico) para que esbuild pueda trazarlo como dependencia en tiempo de build.
-// La copia canónica para el sitio estático está en js/data/worldcup_2022.json.
+// ── Carga de datos locales ────────────────────────────────────────────────────
+// IMPORTANTE: require() con ruta ESTÁTICA (sin path.join/__dirname dinámico)
+// para que esbuild lo trace como dependencia en tiempo de build.
 
+// Historial multi-competición (fuente principal de stats)
+let TEAM_HISTORY = null;
+try {
+  TEAM_HISTORY = require("./data/team_history.json");
+  console.info(`[football-data] team_history cargado: ${Object.keys(TEAM_HISTORY.teams ?? {}).length} equipos`);
+} catch (err) {
+  console.warn("[football-data] data/team_history.json no disponible:", err.message);
+}
+
+// WC 2022 (usado para resource=matches y globalAvgGoals de referencia)
 let WC2022 = null;
 try {
   WC2022 = require("./data/wc2022.json");
-  console.info(`[football-data] WC2022 cargado: ${WC2022.totalMatches} partidos, ${Object.keys(WC2022.teamStats).length} equipos`);
+  console.info(`[football-data] WC2022 cargado: ${WC2022.totalMatches} partidos`);
 } catch (err) {
   console.warn("[football-data] data/wc2022.json no disponible:", err.message);
 }
@@ -90,32 +105,32 @@ try {
 const ELO_TABLE = {
   ARG: 1920, FRA: 1890, BRA: 1880, ENG: 1850, ESP: 1840,
   GER: 1820, POR: 1800, NED: 1790, BEL: 1780, URU: 1760,
-  DEN: 1760, CRO: 1740, SUI: 1730, MEX: 1720, SEN: 1710,
-  MAR: 1700, POL: 1700, JPN: 1690, SRB: 1680, WAL: 1680,
-  USA: 1660, CAN: 1650, KOR: 1650, ECU: 1640, IRN: 1640,
-  KSA: 1630, AUS: 1620, GHA: 1610, CRC: 1610, TUN: 1600,
-  CMR: 1590, QAT: 1580,
+  ITA: 1750, DEN: 1760, CRO: 1740, SUI: 1730, MEX: 1720,
+  SEN: 1710, MAR: 1700, POL: 1700, JPN: 1690, SRB: 1680,
+  WAL: 1680, USA: 1660, CAN: 1650, KOR: 1650, ECU: 1640,
+  IRN: 1640, KSA: 1630, NGA: 1630, AUS: 1620, GHA: 1610,
+  CRC: 1610, TUN: 1600, CMR: 1590, QAT: 1580,
 };
 const DEFAULT_ELO = 1600;
 
 const FLAG_MAP = {
   ARG: "🇦🇷", FRA: "🇫🇷", BRA: "🇧🇷", ENG: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", ESP: "🇪🇸",
   GER: "🇩🇪", POR: "🇵🇹", NED: "🇳🇱", BEL: "🇧🇪", URU: "🇺🇾",
-  DEN: "🇩🇰", CRO: "🇭🇷", SUI: "🇨🇭", MEX: "🇲🇽", SEN: "🇸🇳",
-  MAR: "🇲🇦", POL: "🇵🇱", JPN: "🇯🇵", SRB: "🇷🇸", WAL: "🏴󠁧󠁢󠁷󠁬󠁳󠁿",
-  USA: "🇺🇸", CAN: "🇨🇦", KOR: "🇰🇷", ECU: "🇪🇨", IRN: "🇮🇷",
-  KSA: "🇸🇦", AUS: "🇦🇺", GHA: "🇬🇭", CRC: "🇨🇷", TUN: "🇹🇳",
-  CMR: "🇨🇲", QAT: "🇶🇦",
+  ITA: "🇮🇹", DEN: "🇩🇰", CRO: "🇭🇷", SUI: "🇨🇭", MEX: "🇲🇽",
+  SEN: "🇸🇳", MAR: "🇲🇦", POL: "🇵🇱", JPN: "🇯🇵", SRB: "🇷🇸",
+  WAL: "🏴󠁧󠁢󠁷󠁬󠁳󠁿", USA: "🇺🇸", CAN: "🇨🇦", KOR: "🇰🇷", ECU: "🇪🇨",
+  IRN: "🇮🇷", KSA: "🇸🇦", NGA: "🇳🇬", AUS: "🇦🇺", GHA: "🇬🇭",
+  CRC: "🇨🇷", TUN: "🇹🇳", CMR: "🇨🇲", QAT: "🇶🇦",
 };
 
 const CONFEDERATION_BY_TLA = {
   ARG: "CONMEBOL", BRA: "CONMEBOL", URU: "CONMEBOL", ECU: "CONMEBOL",
   FRA: "UEFA",     ENG: "UEFA",     ESP: "UEFA",     GER: "UEFA",
   POR: "UEFA",     NED: "UEFA",     BEL: "UEFA",     CRO: "UEFA",
-  SUI: "UEFA",     WAL: "UEFA",     DEN: "UEFA",     POL: "UEFA",
-  SRB: "UEFA",
-  MAR: "CAF",      SEN: "CAF",      GHA: "CAF",      CMR: "CAF",
-  TUN: "CAF",
+  ITA: "UEFA",     SUI: "UEFA",     WAL: "UEFA",     DEN: "UEFA",
+  POL: "UEFA",     SRB: "UEFA",
+  MAR: "CAF",      SEN: "CAF",      NGA: "CAF",      GHA: "CAF",
+  CMR: "CAF",      TUN: "CAF",
   MEX: "CONCACAF", USA: "CONCACAF", CRC: "CONCACAF", CAN: "CONCACAF",
   JPN: "AFC",      KOR: "AFC",      AUS: "AFC",      IRN: "AFC",
   QAT: "AFC",      KSA: "AFC",
@@ -125,18 +140,19 @@ const NAME_MAP = {
   ARG: "Argentina",       FRA: "Francia",        BRA: "Brasil",
   ENG: "Inglaterra",      ESP: "España",         GER: "Alemania",
   POR: "Portugal",        NED: "Países Bajos",   BEL: "Bélgica",
-  URU: "Uruguay",         DEN: "Dinamarca",      CRO: "Croacia",
-  SUI: "Suiza",           MEX: "México",         SEN: "Senegal",
-  MAR: "Marruecos",       POL: "Polonia",        JPN: "Japón",
-  SRB: "Serbia",          WAL: "Gales",          USA: "EE. UU.",
-  CAN: "Canadá",          KOR: "Corea del Sur",  ECU: "Ecuador",
-  IRN: "Irán",            KSA: "Arabia Saudita", AUS: "Australia",
-  GHA: "Ghana",           CRC: "Costa Rica",     TUN: "Túnez",
-  CMR: "Camerún",         QAT: "Catar",
+  URU: "Uruguay",         ITA: "Italia",         DEN: "Dinamarca",
+  CRO: "Croacia",         SUI: "Suiza",          MEX: "México",
+  SEN: "Senegal",         MAR: "Marruecos",      POL: "Polonia",
+  JPN: "Japón",           SRB: "Serbia",         WAL: "Gales",
+  USA: "EE. UU.",         CAN: "Canadá",         KOR: "Corea del Sur",
+  ECU: "Ecuador",         IRN: "Irán",           KSA: "Arabia Saudita",
+  NGA: "Nigeria",         AUS: "Australia",      GHA: "Ghana",
+  CRC: "Costa Rica",      TUN: "Túnez",          CMR: "Camerún",
+  QAT: "Catar",
 };
 
-// Equipos del WC 2022 (32 participantes reales), con nombre en inglés para TSDB search
-const WC_2022_TEAMS = [
+// Las 20 selecciones de la app, con nombre en inglés para TSDB search
+const APP_TEAMS = [
   { tla: "ARG", nameEn: "Argentina"    },
   { tla: "FRA", nameEn: "France"       },
   { tla: "BRA", nameEn: "Brazil"       },
@@ -147,28 +163,16 @@ const WC_2022_TEAMS = [
   { tla: "NED", nameEn: "Netherlands"  },
   { tla: "BEL", nameEn: "Belgium"      },
   { tla: "URU", nameEn: "Uruguay"      },
-  { tla: "DEN", nameEn: "Denmark"      },
+  { tla: "ITA", nameEn: "Italy"        },
   { tla: "CRO", nameEn: "Croatia"      },
-  { tla: "SUI", nameEn: "Switzerland"  },
   { tla: "MEX", nameEn: "Mexico"       },
   { tla: "SEN", nameEn: "Senegal"      },
   { tla: "MAR", nameEn: "Morocco"      },
-  { tla: "POL", nameEn: "Poland"       },
   { tla: "JPN", nameEn: "Japan"        },
-  { tla: "SRB", nameEn: "Serbia"       },
-  { tla: "WAL", nameEn: "Wales"        },
-  { tla: "USA", nameEn: "USA"          },
-  { tla: "CAN", nameEn: "Canada"       },
   { tla: "KOR", nameEn: "South Korea"  },
-  { tla: "ECU", nameEn: "Ecuador"      },
-  { tla: "IRN", nameEn: "Iran"         },
-  { tla: "KSA", nameEn: "Saudi Arabia" },
+  { tla: "USA", nameEn: "USA"          },
   { tla: "AUS", nameEn: "Australia"    },
-  { tla: "GHA", nameEn: "Ghana"        },
-  { tla: "CRC", nameEn: "Costa Rica"   },
-  { tla: "TUN", nameEn: "Tunisia"      },
-  { tla: "CMR", nameEn: "Cameroon"     },
-  { tla: "QAT", nameEn: "Qatar"        },
+  { tla: "NGA", nameEn: "Nigeria"      },
 ];
 
 // Mapa nombre inglés → TLA para normalizar nombres de TSDB en partidos de temporada
@@ -187,60 +191,32 @@ const TLA_BY_TSDB_NAME = {
   "Korea Republic": "KOR",  "United States": "USA",
 };
 
-// Stats fallback por si worldcup_2022.json no se puede cargar
-// Valores reales calculados desde OpenFootball WC 2022 (168 goles, 64 partidos)
-const WC_STATS_FALLBACK = {
-  ARG: { avgGoalsFor: 2.00, avgGoalsAgainst: 1.00, recentResults: ["L","W","W","W","D","W","D"] },
-  AUS: { avgGoalsFor: 1.00, avgGoalsAgainst: 1.50, recentResults: ["L","W","W","L"] },
-  BEL: { avgGoalsFor: 0.33, avgGoalsAgainst: 0.67, recentResults: ["W","L","D"] },
-  BRA: { avgGoalsFor: 1.40, avgGoalsAgainst: 0.40, recentResults: ["W","W","L","W","D"] },
-  CAN: { avgGoalsFor: 0.67, avgGoalsAgainst: 2.33, recentResults: ["L","L","L"] },
-  CMR: { avgGoalsFor: 1.33, avgGoalsAgainst: 1.33, recentResults: ["L","D","W"] },
-  CRC: { avgGoalsFor: 1.00, avgGoalsAgainst: 3.67, recentResults: ["L","W","L"] },
-  CRO: { avgGoalsFor: 1.00, avgGoalsAgainst: 0.86, recentResults: ["D","W","D","D","D","L","W"] },
-  DEN: { avgGoalsFor: 0.33, avgGoalsAgainst: 1.00, recentResults: ["D","L","L"] },
-  ECU: { avgGoalsFor: 1.33, avgGoalsAgainst: 1.00, recentResults: ["W","D","L"] },
-  ENG: { avgGoalsFor: 2.60, avgGoalsAgainst: 0.80, recentResults: ["W","D","W","W","L"] },
-  ESP: { avgGoalsFor: 2.25, avgGoalsAgainst: 0.75, recentResults: ["W","D","L","D"] },
-  FRA: { avgGoalsFor: 2.14, avgGoalsAgainst: 1.00, recentResults: ["W","W","L","W","W","W","D"] },
-  GER: { avgGoalsFor: 2.00, avgGoalsAgainst: 1.67, recentResults: ["L","D","W"] },
-  GHA: { avgGoalsFor: 1.67, avgGoalsAgainst: 2.33, recentResults: ["L","W","L"] },
-  IRN: { avgGoalsFor: 1.33, avgGoalsAgainst: 2.33, recentResults: ["L","W","L"] },
-  JPN: { avgGoalsFor: 1.25, avgGoalsAgainst: 1.00, recentResults: ["W","L","W","D"] },
-  KOR: { avgGoalsFor: 1.25, avgGoalsAgainst: 2.00, recentResults: ["D","L","W","L"] },
-  KSA: { avgGoalsFor: 1.00, avgGoalsAgainst: 1.67, recentResults: ["W","L","L"] },
-  MAR: { avgGoalsFor: 0.86, avgGoalsAgainst: 0.71, recentResults: ["D","W","W","D","W","L","L"] },
-  MEX: { avgGoalsFor: 0.67, avgGoalsAgainst: 1.00, recentResults: ["D","L","W"] },
-  NED: { avgGoalsFor: 2.00, avgGoalsAgainst: 0.80, recentResults: ["W","D","W","W","D"] },
-  POL: { avgGoalsFor: 0.75, avgGoalsAgainst: 1.25, recentResults: ["D","W","L","L"] },
-  POR: { avgGoalsFor: 2.40, avgGoalsAgainst: 1.20, recentResults: ["W","W","L","W","L"] },
-  QAT: { avgGoalsFor: 0.33, avgGoalsAgainst: 2.33, recentResults: ["L","L","L"] },
-  SEN: { avgGoalsFor: 1.25, avgGoalsAgainst: 1.75, recentResults: ["L","W","W","L"] },
-  SRB: { avgGoalsFor: 1.67, avgGoalsAgainst: 2.67, recentResults: ["L","D","L"] },
-  SUI: { avgGoalsFor: 1.25, avgGoalsAgainst: 2.25, recentResults: ["W","L","W","L"] },
-  TUN: { avgGoalsFor: 0.33, avgGoalsAgainst: 0.33, recentResults: ["D","L","W"] },
-  URU: { avgGoalsFor: 0.67, avgGoalsAgainst: 0.67, recentResults: ["D","L","W"] },
-  USA: { avgGoalsFor: 0.75, avgGoalsAgainst: 1.00, recentResults: ["D","D","W","L"] },
-  WAL: { avgGoalsFor: 0.33, avgGoalsAgainst: 2.00, recentResults: ["D","L","L"] },
-};
-
 // globalAvgGoals WC 2022: 168 goles / 64 partidos = 2.625/partido = 1.312/equipo/partido
+// Se mantiene este valor como referencia para el modelo Poisson (calibrado vs WC).
 const WC_GLOBAL_AVG_GOALS = (WC2022?.globalAvgGoals) ?? 1.312;
 
 const ERR_PLAN_RESTRICTION = "PLAN_RESTRICTION";
 
-// ── Helpers: datos locales (OpenFootball) ─────────────────────────────────────
+// ── Helpers: datos locales ────────────────────────────────────────────────────
 
 /**
- * Devuelve stats de WC 2022 para un equipo.
- * Prioridad: JSON local → WC_STATS_FALLBACK → defaults.
+ * Devuelve stats históricas para un equipo.
+ * Prioridad: team_history.json (multi-competición) → defaults.
  */
-function getWC2022Stats(tla) {
-  return (
-    WC2022?.teamStats?.[tla] ??
-    WC_STATS_FALLBACK[tla] ??
-    { avgGoalsFor: 1.30, avgGoalsAgainst: 1.30, recentResults: [] }
-  );
+function getHistoryStats(tla) {
+  const h = TEAM_HISTORY?.teams?.[tla];
+  if (h) {
+    return {
+      avgGoalsFor:     h.avgGoalsFor,
+      avgGoalsAgainst: h.avgGoalsAgainst,
+      recentResults:   h.recentResults ?? [],
+      wins:            h.wins  ?? 0,
+      draws:           h.draws ?? 0,
+      losses:          h.losses ?? 0,
+    };
+  }
+  // fallback genérico si team_history.json no está disponible
+  return { avgGoalsFor: 1.40, avgGoalsAgainst: 1.40, recentResults: [], wins: 0, draws: 0, losses: 0 };
 }
 
 // ── Helpers: TheSportsDB ──────────────────────────────────────────────────────
@@ -316,12 +292,12 @@ async function enrichTeamTsdb(nameEn, apiKey) {
 async function handleTeamsTsdb(apiKey) {
   // Enriquecer forma reciente en paralelo — allSettled para fallos individuales
   const settled = await Promise.allSettled(
-    WC_2022_TEAMS.map(t => enrichTeamTsdb(t.nameEn, apiKey))
+    APP_TEAMS.map(t => enrichTeamTsdb(t.nameEn, apiKey))
   );
 
   let enrichCount = 0;
   const enrichMap = {};
-  WC_2022_TEAMS.forEach((t, i) => {
+  APP_TEAMS.forEach((t, i) => {
     const r = settled[i];
     if (r.status === "fulfilled" && r.value?.recentResults?.length > 0) {
       enrichMap[t.tla] = r.value;
@@ -329,22 +305,26 @@ async function handleTeamsTsdb(apiKey) {
     }
   });
 
-  console.info(`[football-data] TSDB recentResults enriched: ${enrichCount}/${WC_2022_TEAMS.length}`);
-  console.info(`[football-data] avgGoals source: ${WC2022 ? "worldcup_2022.json" : "WC_STATS_FALLBACK"}`);
+  const statsSource = TEAM_HISTORY ? "team_history.json" : "static_defaults";
+  console.info(`[football-data] stats source: ${statsSource}`);
+  console.info(`[football-data] TSDB recentResults enriched: ${enrichCount}/${APP_TEAMS.length}`);
 
-  const teams = WC_2022_TEAMS.map(t => {
-    const wc     = getWC2022Stats(t.tla);
-    const tsdb   = enrichMap[t.tla];
+  const teams = APP_TEAMS.map(t => {
+    const hist = getHistoryStats(t.tla);
+    const tsdb = enrichMap[t.tla];
     return {
       id:              t.tla,
       name:            NAME_MAP[t.tla]             ?? t.nameEn,
       flag:            FLAG_MAP[t.tla]             ?? "🏳",
       confederation:   CONFEDERATION_BY_TLA[t.tla] ?? "?",
       elo:             ELO_TABLE[t.tla]            ?? DEFAULT_ELO,
-      avgGoalsFor:     wc.avgGoalsFor,    // WC 2022 real
-      avgGoalsAgainst: wc.avgGoalsAgainst, // WC 2022 real
-      // Forma reciente: TSDB (actual) > WC 2022 (histórico) > vacío
-      recentResults:   tsdb?.recentResults ?? wc.recentResults,
+      avgGoalsFor:     hist.avgGoalsFor,
+      avgGoalsAgainst: hist.avgGoalsAgainst,
+      // Forma reciente: TSDB (más actual) > team_history.json > vacío
+      recentResults:   tsdb?.recentResults ?? hist.recentResults,
+      wins:            hist.wins,
+      draws:           hist.draws,
+      losses:          hist.losses,
     };
   }).sort((a, b) => b.elo - a.elo);
 
@@ -352,9 +332,10 @@ async function handleTeamsTsdb(apiKey) {
     teams,
     globalAvgGoals: WC_GLOBAL_AVG_GOALS,
     _meta: {
-      statsSource:   WC2022 ? "worldcup_2022.json" : "static_fallback",
+      statsSource,
       tsdbEnriched:  enrichCount,
-      totalTeams:    WC_2022_TEAMS.length,
+      totalTeams:    APP_TEAMS.length,
+      historyWindow: TEAM_HISTORY?.window ?? "n/a",
     },
   };
 }
