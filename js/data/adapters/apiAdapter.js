@@ -135,16 +135,41 @@ export async function getRecentMatches(teamId) {
 }
 
 /**
- * Dataset histórico completo para backtesting.
+ * Dataset histórico completo para backtesting y Head to Head.
+ *
+ * Cadena de fallback:
+ *   1. Proxy Netlify (resource=matches) — fuente principal
+ *   2. Fetch directo de /js/data/worldcup_2022.json — asset estático siempre disponible
+ *   3. mockAdapter — último recurso (datos ficticios, solo para dev sin red)
+ *
+ * IMPORTANTE: el mock tiene partidos inventados (ej: ARG vs FRA 0-0) pensados
+ * para calibrar el modelo, NO para mostrar marcadores reales. Por eso el fallback
+ * al asset estático es crítico antes de llegar al mock.
  */
 export async function getHistoricalMatches() {
+  // 1. Proxy Netlify
   try {
     const { matches } = await ensureMatches();
+    console.info("[apiAdapter] getHistoricalMatches: proxy OK,", matches.length, "partidos");
     return matches;
-  } catch (err) {
-    console.warn("[apiAdapter] getHistoricalMatches fallback →", err.message);
-    return mockAdapter.getHistoricalMatches();
+  } catch (proxyErr) {
+    console.warn("[apiAdapter] getHistoricalMatches proxy fallback →", proxyErr.message);
   }
+
+  // 2. Asset estático (siempre disponible en Netlify, sin key, sin función)
+  try {
+    const wc = await fetch("/js/data/worldcup_2022.json").then(r => r.json());
+    if (Array.isArray(wc.matches) && wc.matches.length > 0) {
+      console.info("[apiAdapter] getHistoricalMatches: asset estático OK,", wc.matches.length, "partidos");
+      return wc.matches;
+    }
+  } catch (staticErr) {
+    console.warn("[apiAdapter] getHistoricalMatches asset estático fallback →", staticErr.message);
+  }
+
+  // 3. Mock — solo datos de demostración, marcadores NO reales
+  console.warn("[apiAdapter] getHistoricalMatches: usando mock (datos ficticios)");
+  return mockAdapter.getHistoricalMatches();
 }
 
 /**

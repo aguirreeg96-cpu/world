@@ -233,6 +233,8 @@ function renderHeadToHead(teamA, teamB, h2h) {
   const content = $("headToHeadContent");
   if (!card || !content) return;
 
+  console.log("[h2h debug] h2h:", JSON.stringify(h2h));
+
   card.style.display = "block";
 
   if (!h2h || !h2h.found) {
