@@ -8,7 +8,7 @@
  *   4. Conectar eventos UI
  */
 
-import { getAllTeams, getTeamById }        from "./data/teams.js";
+import { getTeams, getTeamById }           from "./data/provider.js";
 import { analyzeMatch, DEFAULT_WEIGHTS }   from "./models/aggregator.js";
 import { analyzeOdds }                     from "./models/odds.js";
 import { calibrateWeights, runBacktest }   from "./models/calibrator.js";
@@ -46,7 +46,7 @@ let _lastTeamB  = null;
   renderModelMetrics({ bestWeights, calibratedMetrics, defaultMetrics });
 
   // 2. UI
-  const teams      = getAllTeams();
+  const teams      = getTeams();
   const selectA    = document.getElementById("teamA");
   const selectB    = document.getElementById("teamB");
   const btnAnalyze = document.getElementById("btnAnalyze");
