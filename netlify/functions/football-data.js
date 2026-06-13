@@ -1,5 +1,5 @@
 /**
- * Netlify Function — Proxy seguro para football-data.org
+ * Netlify Function — Proxy seguro para datos de fútbol
  *
  * Endpoint: /.netlify/functions/football-data
  *
@@ -9,53 +9,94 @@
  *   ?resource=matches         → partidos del Mundial 2022 (resultados reales)
  *   ?resource=team&id=ARG     → un equipo específico por TLA code
  *
- * ── Configuración de la API key ──────────────────────────────────────────────
+ * ════════════════════════════════════════════════════════════════════════════
+ * ⚠  RESTRICCIÓN DEL PLAN GRATUITO DE football-data.org
+ * ════════════════════════════════════════════════════════════════════════════
  *
- *   1. Registrarse en https://www.football-data.org/client/register
- *      (plan gratuito: 10 req/min, acceso a todas las competiciones principales)
+ * El plan gratuito (Tier 1) NO incluye torneos de selecciones nacionales.
+ * El endpoint /competitions/WC/... devuelve HTTP 403:
+ *   "The resource you are looking for is restricted and apparently
+ *    not within your permissions."
  *
- *   2. En Netlify UI:
- *      Site settings → Environment variables → Add variable
- *      Key:   FOOTBALL_DATA_API_KEY
- *      Value: tu_token_aqui
+ * ── Competiciones DISPONIBLES en plan gratuito (Tier 1) ─────────────────────
  *
- *   3. Para desarrollo local con Netlify CLI:
- *      Crear archivo .env en la raíz del proyecto (ya está en .gitignore):
- *        FOOTBALL_DATA_API_KEY=tu_token_aqui
- *      Luego correr:  netlify dev
+ *   PL  - Premier League        BL1 - Bundesliga
+ *   SA  - Serie A               PD  - Primera División
+ *   FL1 - Ligue 1               ELC - Championship
+ *   CL  - UEFA Champions League
  *
- *   JAMÁS escribir la key en este archivo ni en ningún archivo del repo.
+ * ── Competiciones RESTRINGIDAS (Tier 2+, de pago) ───────────────────────────
  *
- * ── Fuente de datos ───────────────────────────────────────────────────────────
+ *   WC  - FIFA World Cup  ← este proxy usa este código → 403 en plan gratis
+ *   WCQ - Eliminatorias del Mundial
+ *   EC  - European Championship
  *
- *   API: football-data.org v4
- *   Competición: FIFA World Cup (code: "WC")
- *   Temporada: 2022 (última edición completa disponible en plan gratuito)
+ * ── Alternativas gratuitas para Mundial / selecciones nacionales ─────────────
  *
- *   Para actualizar a otra edición: cambiar WC_SEASON más abajo.
+ *   1. api-football.com (v3 via RapidAPI)  ← RECOMENDADA
+ *      Plan Free: 100 req/día. WC 2022 histórico completo.
+ *      Endpoint: GET https://v3.football.api-sports.io/fixtures?league=1&season=2022
+ *      Headers:  x-rapidapi-key: TU_KEY
+ *                x-rapidapi-host: v3.football.api-sports.io
+ *      Registro: https://rapidapi.com/api-sports/api/api-football
+ *      Cambiar env var: API_FOOTBALL_KEY (+ actualizar PROVIDER_MODE a "api-football")
+ *
+ *   2. thesportsdb.com
+ *      Free sin key o con key gratuita. Copa del Mundo histórica disponible.
+ *      Doc: https://www.thesportsdb.com/api.php
+ *
+ *   3. Datos estáticos (opción offline, sin API key)
+ *      El mock actual (teams.js + matches_mock.js) ya cubre 20 selecciones con
+ *      datos del WC 2022. Suficiente para el modelo estadístico educativo.
+ *      Cambiar DATA_SOURCE a "mock" en provider.js para usar esta opción.
+ *
+ * ── Cómo cambiar de proveedor ────────────────────────────────────────────────
+ *
+ *   1. Cambiar PROVIDER_MODE más abajo ("fd" | "api-football")
+ *   2. Configurar la env var correspondiente en Netlify UI
+ *   3. El resto de la app (apiAdapter.js, provider.js, main.js) no cambia
+ *
+ * ── Configuración de API key ─────────────────────────────────────────────────
+ *
+ *   football-data.org:  FOOTBALL_DATA_API_KEY  (solo útil con plan Tier 2+)
+ *   api-football.com:   API_FOOTBALL_KEY       (plan free: 100 req/día)
+ *
+ *   Netlify UI: Site settings → Environment variables → Add variable
+ *   Local dev:  Archivo .env en raíz del proyecto (ya está en .gitignore)
+ *
+ *   JAMÁS escribir claves en este archivo ni en ningún archivo del repo.
  *
  * ── Caché ─────────────────────────────────────────────────────────────────────
  *
  *   Las respuestas exitosas incluyen Cache-Control: s-maxage=3600
- *   para que el CDN de Netlify cachee durante 1 hora. Esto evita agotar
- *   la quota gratuita de 10 req/min en cada visita a la app.
+ *   para que el CDN de Netlify cachee durante 1 hora.
  *
  * ── Node.js ───────────────────────────────────────────────────────────────────
  *
- *   Requiere Node.js 18+ (fetch nativo disponible). Netlify Functions usa
- *   Node 18 por defecto. Sin dependencias npm.
+ *   Requiere Node.js 18+ (fetch nativo disponible). Sin dependencias npm.
  */
 
 "use strict";
 
+// ── Configuración del proveedor ───────────────────────────────────────────────
+// Cambiar a "api-football" y configurar API_FOOTBALL_KEY para usar
+// api-football.com (cubre Mundial en plan gratuito).
+
+const PROVIDER_MODE = "fd"; // "fd" | "api-football"
+
+// ── football-data.org ─────────────────────────────────────────────────────────
 const FD_BASE   = "https://api.football-data.org/v4";
-const WC_CODE   = "WC";   // código de la competición en football-data.org
-const WC_SEASON = "2022"; // temporada a consultar
+const WC_CODE   = "WC";
+const WC_SEASON = "2022";
+
+// ── api-football.com (RapidAPI) ───────────────────────────────────────────────
+const AF_BASE    = "https://v3.football.api-sports.io";
+const AF_LEAGUE  = "1";    // ID del torneo FIFA World Cup en api-football
+const AF_SEASON  = "2022";
 
 // ── ELO estáticos ────────────────────────────────────────────────────────────
-// ELO no está disponible en football-data.org. Estos valores se usan como
-// fallback/semilla. Actualizar manualmente desde eloratings.net o clubelo.com.
-// Los equipos no listados reciben DEFAULT_ELO.
+// ELO no está disponible en ninguna de las APIs. Actualizar manualmente
+// desde eloratings.net o clubelo.com.
 
 const ELO_TABLE = {
   ARG: 1920, FRA: 1890, BRA: 1880, ENG: 1850, ESP: 1840,
@@ -68,7 +109,6 @@ const ELO_TABLE = {
 };
 const DEFAULT_ELO = 1600;
 
-// Mapa de TLA (código 3 letras de football-data.org) a flag emoji
 const FLAG_MAP = {
   ARG: "🇦🇷", FRA: "🇫🇷", BRA: "🇧🇷", ENG: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", ESP: "🇪🇸",
   GER: "🇩🇪", POR: "🇵🇹", NED: "🇳🇱", BEL: "🇧🇪", URU: "🇺🇾",
@@ -79,35 +119,53 @@ const FLAG_MAP = {
   GHA: "🇬🇭", IRN: "🇮🇷",
 };
 
-// Mapa de nombre de área (continente/confederación) en football-data.org
-// a la abreviatura usada por el modelo
-const CONF_MAP = {
-  "South America":  "CONMEBOL",
-  "Europe":         "UEFA",
-  "Africa":         "CAF",
-  "North/C. America": "CONCACAF",
-  "Asia":           "AFC",
-  "Oceania":        "OFC",
+// Mapa de TLA a nombre canónico (para normalizar entre proveedores)
+const NAME_MAP = {
+  ARG: "Argentina",  FRA: "Francia",   BRA: "Brasil",   ENG: "Inglaterra",
+  ESP: "España",     GER: "Alemania",  POR: "Portugal", NED: "Países Bajos",
+  BEL: "Bélgica",   URU: "Uruguay",   ITA: "Italia",   CRO: "Croacia",
+  MEX: "México",    SEN: "Senegal",   MAR: "Marruecos",JPN: "Japón",
+  USA: "EE. UU.",   KOR: "Corea del Sur", NGA: "Nigeria", AUS: "Australia",
+  QAT: "Catar",     ECU: "Ecuador",   SUI: "Suiza",    WAL: "Gales",
+  DEN: "Dinamarca", TUN: "Túnez",     CRC: "Costa Rica", POL: "Polonia",
+  CMR: "Camerún",   SRB: "Serbia",    GHA: "Ghana",    IRN: "Irán",
 };
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+const CONF_MAP = {
+  "South America":    "CONMEBOL",
+  "Europe":           "UEFA",
+  "Africa":           "CAF",
+  "North/C. America": "CONCACAF",
+  "Asia":             "AFC",
+  "Oceania":          "OFC",
+};
+
+// ── Código de error para restricciones de plan ────────────────────────────────
+const ERR_PLAN_RESTRICTION = "PLAN_RESTRICTION";
+
+// ── Helpers: football-data.org ────────────────────────────────────────────────
 
 async function fdFetch(path, apiKey) {
   const url = `${FD_BASE}${path}`;
-  const res = await fetch(url, {
-    headers: { "X-Auth-Token": apiKey },
-  });
+  const res = await fetch(url, { headers: { "X-Auth-Token": apiKey } });
+
+  if (res.status === 403) {
+    // Plan restriction — no es un error de red, es una limitación de plan.
+    // Tratarlo como señal de fallback, no como fallo catastrófico.
+    const text = await res.text().catch(() => "");
+    const err  = new Error(`football-data.org 403: endpoint restringido en plan actual. ${text.slice(0, 120)}`);
+    err.code   = ERR_PLAN_RESTRICTION;
+    throw err;
+  }
+
   if (!res.ok) {
     const text = await res.text().catch(() => "");
     throw new Error(`FD API ${res.status}: ${text.slice(0, 200)}`);
   }
+
   return res.json();
 }
 
-/**
- * Calcula promedios de goles y forma reciente de un equipo desde
- * la lista completa de partidos del torneo.
- */
 function computeTeamStats(tla, matches) {
   const teamMatches = matches.filter(
     m => m.homeTeam?.tla === tla || m.awayTeam?.tla === tla
@@ -122,27 +180,26 @@ function computeTeamStats(tla, matches) {
   const results = [];
 
   for (const m of teamMatches) {
-    const isHome  = m.homeTeam?.tla === tla;
-    const scored  = isHome ? m.score.fullTime.home : m.score.fullTime.away;
+    const isHome   = m.homeTeam?.tla === tla;
+    const scored   = isHome ? m.score.fullTime.home : m.score.fullTime.away;
     const conceded = isHome ? m.score.fullTime.away : m.score.fullTime.home;
 
     goalsFor     += scored;
     goalsAgainst += conceded;
 
-    if (scored > conceded)  results.push("W");
+    if (scored > conceded)      results.push("W");
     else if (scored < conceded) results.push("L");
-    else                    results.push("D");
+    else                        results.push("D");
   }
 
   return {
     avgGoalsFor:     parseFloat((goalsFor     / teamMatches.length).toFixed(2)),
     avgGoalsAgainst: parseFloat((goalsAgainst / teamMatches.length).toFixed(2)),
-    recentResults:   results.slice(-8).reverse(), // últimos 8, más reciente primero
+    recentResults:   results.slice(-8).reverse(),
   };
 }
 
-/** Normaliza un partido de FD.org al formato interno de la app. */
-function normalizeMatch(raw) {
+function normalizeFdMatch(raw) {
   return {
     home:      raw.homeTeam?.tla,
     away:      raw.awayTeam?.tla,
@@ -151,18 +208,13 @@ function normalizeMatch(raw) {
   };
 }
 
-// ── Handlers de recursos ──────────────────────────────────────────────────────
-
-async function handleTeams(apiKey) {
-  // Obtener lista de equipos del torneo
+async function handleTeamsFd(apiKey) {
   const teamsData   = await fdFetch(`/competitions/${WC_CODE}/teams?season=${WC_SEASON}`, apiKey);
-  // Obtener partidos terminados para calcular estadísticas de goles
   const matchesData = await fdFetch(`/competitions/${WC_CODE}/matches?season=${WC_SEASON}&status=FINISHED`, apiKey);
   const matches     = matchesData.matches ?? [];
 
   const globalAvgGoals = (() => {
-    let total = 0;
-    let count = 0;
+    let total = 0, count = 0;
     for (const m of matches) {
       total += (m.score?.fullTime?.home ?? 0) + (m.score?.fullTime?.away ?? 0);
       count++;
@@ -175,8 +227,8 @@ async function handleTeams(apiKey) {
     const stats = computeTeamStats(tla, matches);
     return {
       id:              tla,
-      name:            t.shortName ?? t.name,
-      flag:            FLAG_MAP[tla]  ?? "🏳",
+      name:            NAME_MAP[tla] ?? t.shortName ?? t.name,
+      flag:            FLAG_MAP[tla] ?? "🏳",
       confederation:   CONF_MAP[t.area?.name] ?? t.area?.name ?? "?",
       elo:             ELO_TABLE[tla] ?? DEFAULT_ELO,
       avgGoalsFor:     stats.avgGoalsFor,
@@ -188,17 +240,146 @@ async function handleTeams(apiKey) {
   return { teams, globalAvgGoals };
 }
 
-async function handleMatches(apiKey) {
+async function handleMatchesFd(apiKey) {
   const data = await fdFetch(
     `/competitions/${WC_CODE}/matches?season=${WC_SEASON}&status=FINISHED`,
     apiKey
   );
   const matches = (data.matches ?? [])
     .filter(m => m.score?.fullTime?.home !== null && m.score?.fullTime?.away !== null)
-    .map(normalizeMatch)
+    .map(normalizeFdMatch)
     .filter(m => m.home && m.away);
 
   return { matches };
+}
+
+// ── Helpers: api-football.com (RapidAPI) ─────────────────────────────────────
+
+async function afFetch(path, apiKey) {
+  const url = `${AF_BASE}${path}`;
+  const res = await fetch(url, {
+    headers: {
+      "x-rapidapi-key":  apiKey,
+      "x-rapidapi-host": "v3.football.api-sports.io",
+    },
+  });
+
+  if (res.status === 403 || res.status === 401) {
+    const text = await res.text().catch(() => "");
+    const err  = new Error(`api-football.com ${res.status}: clave inválida o plan restringido. ${text.slice(0, 120)}`);
+    err.code   = ERR_PLAN_RESTRICTION;
+    throw err;
+  }
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`api-football ${res.status}: ${text.slice(0, 200)}`);
+  }
+
+  return res.json();
+}
+
+// TLA propio de api-football → TLA estándar FIFA (3 letras)
+// api-football usa códigos propios que no siempre coinciden con FIFA
+const AF_TLA_MAP = {
+  "Argentina": "ARG", "France": "FRA", "Brazil": "BRA", "England": "ENG",
+  "Spain": "ESP", "Germany": "GER", "Portugal": "POR", "Netherlands": "NED",
+  "Belgium": "BEL", "Uruguay": "URU", "Italy": "ITA", "Croatia": "CRO",
+  "Mexico": "MEX", "Senegal": "SEN", "Morocco": "MAR", "Japan": "JPN",
+  "USA": "USA", "South Korea": "KOR", "Nigeria": "NGA", "Australia": "AUS",
+  "Qatar": "QAT", "Ecuador": "ECU", "Switzerland": "SUI", "Wales": "WAL",
+  "Denmark": "DEN", "Tunisia": "TUN", "Costa Rica": "CRC", "Poland": "POL",
+  "Cameroon": "CMR", "Serbia": "SRB", "Ghana": "GHA", "Iran": "IRN",
+};
+
+function afTeamToTla(team) {
+  return AF_TLA_MAP[team?.name] ?? team?.code ?? team?.name?.slice(0, 3)?.toUpperCase();
+}
+
+async function handleTeamsAf(apiKey) {
+  const data    = await afFetch(`/fixtures?league=${AF_LEAGUE}&season=${AF_SEASON}`, apiKey);
+  const fixtures = data.response ?? [];
+
+  // Extraer equipos únicos y sus partidos terminados
+  const teamMap  = new Map();
+  const matchesForStats = [];
+
+  for (const f of fixtures) {
+    if (f.fixture?.status?.short !== "FT") continue;
+
+    const homeTla = afTeamToTla(f.teams?.home);
+    const awayTla = afTeamToTla(f.teams?.away);
+    if (!homeTla || !awayTla) continue;
+
+    teamMap.set(homeTla, f.teams.home);
+    teamMap.set(awayTla, f.teams.away);
+
+    matchesForStats.push({
+      homeTeam: { tla: homeTla },
+      awayTeam: { tla: awayTla },
+      score: {
+        fullTime: {
+          home: f.goals?.home ?? 0,
+          away: f.goals?.away ?? 0,
+        },
+      },
+    });
+  }
+
+  let totalGoals = 0;
+  for (const m of matchesForStats) {
+    totalGoals += m.score.fullTime.home + m.score.fullTime.away;
+  }
+  const globalAvgGoals = matchesForStats.length > 0
+    ? parseFloat((totalGoals / matchesForStats.length).toFixed(3))
+    : 1.35;
+
+  const teams = [...teamMap.keys()].map(tla => {
+    const stats = computeTeamStats(tla, matchesForStats);
+    return {
+      id:              tla,
+      name:            NAME_MAP[tla] ?? tla,
+      flag:            FLAG_MAP[tla] ?? "🏳",
+      confederation:   "?",
+      elo:             ELO_TABLE[tla] ?? DEFAULT_ELO,
+      avgGoalsFor:     stats.avgGoalsFor,
+      avgGoalsAgainst: stats.avgGoalsAgainst,
+      recentResults:   stats.recentResults,
+    };
+  }).sort((a, b) => b.elo - a.elo);
+
+  return { teams, globalAvgGoals };
+}
+
+async function handleMatchesAf(apiKey) {
+  const data     = await afFetch(`/fixtures?league=${AF_LEAGUE}&season=${AF_SEASON}`, apiKey);
+  const fixtures = data.response ?? [];
+
+  const matches = fixtures
+    .filter(f => f.fixture?.status?.short === "FT")
+    .map(f => ({
+      home:      afTeamToTla(f.teams?.home),
+      away:      afTeamToTla(f.teams?.away),
+      goalsHome: f.goals?.home ?? 0,
+      goalsAway: f.goals?.away ?? 0,
+    }))
+    .filter(m => m.home && m.away);
+
+  return { matches };
+}
+
+// ── Dispatchers por recurso ───────────────────────────────────────────────────
+
+async function handleTeams(apiKey) {
+  return PROVIDER_MODE === "api-football"
+    ? handleTeamsAf(apiKey)
+    : handleTeamsFd(apiKey);
+}
+
+async function handleMatches(apiKey) {
+  return PROVIDER_MODE === "api-football"
+    ? handleMatchesAf(apiKey)
+    : handleMatchesFd(apiKey);
 }
 
 async function handleTeam(apiKey, id) {
@@ -211,12 +392,10 @@ async function handleTeam(apiKey, id) {
 // ── Handler principal de la Netlify Function ──────────────────────────────────
 
 exports.handler = async function (event) {
-  // Solo GET
   if (event.httpMethod !== "GET") {
     return { statusCode: 405, body: JSON.stringify({ error: "method_not_allowed" }) };
   }
 
-  // CORS para desarrollo local con netlify dev
   const corsHeaders = {
     "Access-Control-Allow-Origin":  "*",
     "Access-Control-Allow-Methods": "GET",
@@ -226,7 +405,6 @@ exports.handler = async function (event) {
   const params   = event.queryStringParameters ?? {};
   const resource = params.resource;
 
-  // Validar resource contra whitelist
   const ALLOWED = ["teams", "matches", "team"];
   if (!resource || !ALLOWED.includes(resource)) {
     return {
@@ -239,22 +417,26 @@ exports.handler = async function (event) {
     };
   }
 
-  // Verificar presencia de la API key
-  const apiKey = process.env.FOOTBALL_DATA_API_KEY;
+  // Seleccionar la env var según el proveedor activo
+  const apiKey = PROVIDER_MODE === "api-football"
+    ? process.env.API_FOOTBALL_KEY
+    : process.env.FOOTBALL_DATA_API_KEY;
+
   if (!apiKey) {
-    // Señal explícita al frontend para usar fallback mock
+    const envVar = PROVIDER_MODE === "api-football" ? "API_FOOTBALL_KEY" : "FOOTBALL_DATA_API_KEY";
+    console.info(`[football-data] ${envVar} no configurada → señalando fallback al frontend`);
     return {
       statusCode: 200,
       headers: { "Content-Type": "application/json", ...corsHeaders },
       body: JSON.stringify({
         fallback: true,
-        reason:   "FOOTBALL_DATA_API_KEY no está configurada",
-        hint:     "Configurar la variable de entorno en Netlify UI → Site settings → Environment variables",
+        reason:   "no_api_key",
+        message:  `${envVar} no está configurada`,
+        hint:     "Configurar en Netlify UI → Site settings → Environment variables",
       }),
     };
   }
 
-  // Despachar al handler del recurso
   try {
     let data;
 
@@ -285,7 +467,25 @@ exports.handler = async function (event) {
     };
 
   } catch (err) {
-    console.error("[football-data]", err.message);
+    // Restricción de plan → fallback limpio (no es un error de infra, es un límite esperado)
+    if (err.code === ERR_PLAN_RESTRICTION) {
+      console.warn("[football-data] plan_restriction →", err.message);
+      return {
+        statusCode: 200,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+        body: JSON.stringify({
+          fallback: true,
+          reason:   "plan_restriction",
+          message:  err.message,
+          hint:     PROVIDER_MODE === "fd"
+            ? "El plan gratuito de football-data.org no incluye el Mundial (WC). Cambiar PROVIDER_MODE a 'api-football' y configurar API_FOOTBALL_KEY (RapidAPI, plan free 100 req/día)."
+            : "Verificar que la clave API_FOOTBALL_KEY sea válida y que el plan cubra el endpoint solicitado.",
+        }),
+      };
+    }
+
+    // Error de infraestructura genuino
+    console.error("[football-data] upstream_error →", err.message);
     return {
       statusCode: 502,
       headers: { "Content-Type": "application/json", ...corsHeaders },
