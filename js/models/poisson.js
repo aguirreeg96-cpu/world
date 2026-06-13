@@ -42,6 +42,7 @@ function poissonPMF(lambda, k) {
   return Math.exp(logP);
 }
 
+<<<<<<< HEAD
 /**
  * Factor de corrección Dixon-Coles para marcadores bajos.
  *
@@ -58,6 +59,8 @@ function poissonPMF(lambda, k) {
  * @param {number} [rho]
  * @returns {number} factor multiplicativo ≥ 0
  */
+=======
+>>>>>>> df0a7eb (Export Dixon-Coles tau helper)
 export function dixonColesTau(i, j, lambdaA, lambdaB, rho = RHO) {
   if (i === 0 && j === 0) return 1 - lambdaA * lambdaB * rho;
   if (i === 1 && j === 0) return 1 + lambdaB * rho;
