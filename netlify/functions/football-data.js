@@ -350,6 +350,8 @@ async function handleMatchesTsdb(_apiKey) {
       away:      m.away,
       goalsHome: m.goalsHome,
       goalsAway: m.goalsAway,
+      date:      m.date  ?? null,
+      stage:     m.stage ?? null,
     }));
     return { matches };
   }

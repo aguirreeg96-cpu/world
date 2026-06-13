@@ -194,12 +194,18 @@ body {
 /* team preview card */
 .team-preview-card {
   display: flex;
-  align-items: center;
-  gap: 10px;
+  flex-direction: column;
+  gap: 8px;
   background: var(--surface-alt);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   padding: 10px 12px;
+}
+
+.team-preview-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .team-preview-flag { font-size: 22px; flex-shrink: 0; }
@@ -221,6 +227,190 @@ body {
 }
 
 .team-preview-elo strong { color: var(--blue); }
+
+/* expanded stats row */
+.team-preview-stats {
+  border-top: 1px solid var(--border);
+  padding-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tps-wdl {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+}
+
+.tps-w { color: var(--green); }
+.tps-d { color: var(--yellow-light); }
+.tps-l { color: var(--red); }
+.tps-w strong, .tps-d strong, .tps-l strong { font-size: 13px; }
+
+.tps-games {
+  color: var(--text-faint);
+  font-size: 11px;
+}
+
+.tps-goals {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.tps-goals strong { color: var(--text); }
+
+.tps-form {
+  display: flex;
+  gap: 3px;
+  flex-wrap: wrap;
+}
+
+/* ── Head to Head ────────────────────────────────────────────────────────────── */
+.h2h-record {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 16px;
+  margin-bottom: 14px;
+  align-items: center;
+}
+
+.h2h-side {
+  text-align: center;
+}
+
+.h2h-team-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+
+.h2h-wins {
+  font-size: 36px;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.h2h-wins--a { color: var(--green); }
+.h2h-wins--b { color: var(--blue); }
+
+.h2h-side-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.h2h-draws-col {
+  text-align: center;
+  border-left:  1px solid var(--border);
+  border-right: 1px solid var(--border);
+  padding: 0 16px;
+}
+
+.h2h-total {
+  font-size: 11px;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  margin-bottom: 4px;
+}
+
+.h2h-draws {
+  font-size: 30px;
+  font-weight: 900;
+  color: var(--yellow-light);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.h2h-goals {
+  display: flex;
+  justify-content: space-around;
+  font-size: 13px;
+  color: var(--text-muted);
+  background: var(--surface-alt);
+  border-radius: var(--radius-sm);
+  padding: 10px 16px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.h2h-goals strong { color: var(--text); }
+
+/* encounters table */
+.h2h-encounters {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.h2h-encounter-row {
+  display: grid;
+  grid-template-columns: minmax(110px, 1.6fr) 1fr auto 1fr;
+  padding: 8px 12px;
+  font-size: 13px;
+  border-bottom: 1px solid var(--border);
+  align-items: center;
+  gap: 8px;
+}
+
+.h2h-encounter-row:last-child { border-bottom: none; }
+
+.h2h-encounter-row--header {
+  background: var(--surface-alt);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-faint);
+}
+
+.h2h-enc-date {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.h2h-enc-stage {
+  font-size: 11px;
+  color: var(--text-faint);
+}
+
+.h2h-enc-score {
+  text-align: center;
+  font-weight: 700;
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.03em;
+}
+
+.h2h-enc-name {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.h2h-enc-right { text-align: right; }
+
+.h2h-score--a { color: var(--green); }
+.h2h-score--b { color: var(--blue); }
+.h2h-score--d { color: var(--yellow-light); }
+
+.h2h-empty {
+  text-align: center;
+  padding: 20px 0 8px;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.h2h-empty-note {
+  font-size: 12px;
+  color: var(--text-faint);
+  margin-top: 6px;
+  line-height: 1.5;
+}
 
 /* analyze button */
 .btn-analyze {
@@ -939,6 +1129,19 @@ code {
 
   .odds-edge-labels {
     grid-template-columns: 1fr;
+  }
+
+  .h2h-wins { font-size: 28px; }
+  .h2h-draws { font-size: 24px; }
+
+  .h2h-encounter-row {
+    grid-template-columns: 1fr auto 1fr;
+    grid-template-rows: auto auto;
+  }
+
+  .h2h-enc-date {
+    grid-column: 1 / -1;
+    font-size: 11px;
   }
 }
 

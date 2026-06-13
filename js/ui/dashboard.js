@@ -23,15 +23,52 @@ function animateBar(element, targetPct, delay = 0) {
 export function renderTeamPreview(team, containerId) {
   const container = $(containerId);
   if (!team) { container.innerHTML = ""; return; }
+
+  const hasWDL   = team.wins  !== undefined;
+  const hasGoals = team.avgGoalsFor !== undefined;
+  const hasForm  = Array.isArray(team.recentResults) && team.recentResults.length > 0;
+
+  const wdlHTML = hasWDL ? `
+    <div class="tps-wdl">
+      <span class="tps-w">V <strong>${team.wins}</strong></span>
+      <span class="tps-d">E <strong>${team.draws}</strong></span>
+      <span class="tps-l">D <strong>${team.losses}</strong></span>
+      <span class="tps-games">(${team.wins + team.draws + team.losses} partidos)</span>
+    </div>` : "";
+
+  const goalsHTML = hasGoals ? `
+    <div class="tps-goals">
+      ⚽ <strong>${team.avgGoalsFor.toFixed(2)}</strong> / ${team.avgGoalsAgainst.toFixed(2)} en contra
+    </div>` : "";
+
+  const formHTML = hasForm ? `
+    <div class="tps-form">${rawResultDotsHTML(team.recentResults)}</div>` : "";
+
+  const statsHTML = (hasWDL || hasGoals || hasForm) ? `
+    <div class="team-preview-stats">
+      ${wdlHTML}${goalsHTML}${formHTML}
+    </div>` : "";
+
   container.innerHTML = `
     <div class="team-preview-card">
-      <span class="team-preview-flag">${team.flag}</span>
-      <div class="team-preview-info">
-        <span class="team-preview-name">${team.name}</span>
-        <span class="team-preview-conf">${team.confederation}</span>
+      <div class="team-preview-top">
+        <span class="team-preview-flag">${team.flag}</span>
+        <div class="team-preview-info">
+          <span class="team-preview-name">${team.name}</span>
+          <span class="team-preview-conf">${team.confederation}</span>
+        </div>
+        <div class="team-preview-elo">ELO <strong>${team.elo}</strong></div>
       </div>
-      <div class="team-preview-elo">ELO <strong>${team.elo}</strong></div>
+      ${statsHTML}
     </div>`;
+}
+
+function rawResultDotsHTML(results) {
+  const MAP = { W: { code: "W", label: "V" }, D: { code: "D", label: "E" }, L: { code: "L", label: "D" } };
+  return results.slice(0, 10).map(r => {
+    const d = MAP[r] ?? { code: "D", label: "?" };
+    return `<span class="dot dot--${d.code}" title="${r}">${d.label}</span>`;
+  }).join("");
 }
 
 // ── Model Metrics Banner ──────────────────────────────────────────────────────
@@ -57,9 +94,10 @@ export function renderModelMetrics({ bestWeights, calibratedMetrics, defaultMetr
 
 // ── Main Results Render ───────────────────────────────────────────────────────
 
-export function renderResults(teamA, teamB, result) {
+export function renderResults(teamA, teamB, result, h2h = null) {
   renderMatchHeader(teamA, teamB);
   renderProbabilities(teamA, teamB, result);
+  renderHeadToHead(teamA, teamB, h2h);
   renderGoals(teamA, teamB, result);
   renderElo(teamA, teamB, result);
   renderForm(teamA, teamB, result);
@@ -186,6 +224,78 @@ function dotsHTML(dots) {
 
 function cssFormClass(label) {
   return label.toLowerCase().replace(/\s+/g, "-").normalize("NFD").replace(/[̀-ͯ]/g, "");
+}
+
+// ── Head to Head ─────────────────────────────────────────────────────────────
+
+function renderHeadToHead(teamA, teamB, h2h) {
+  const card    = $("headToHeadCard");
+  const content = $("headToHeadContent");
+  if (!card || !content) return;
+
+  card.style.display = "block";
+
+  if (!h2h || !h2h.found) {
+    content.innerHTML = `
+      <div class="h2h-empty">
+        <p>No hay enfrentamientos directos disponibles en la base actual</p>
+        <p class="h2h-empty-note">Base: 64 partidos del Mundial 2022 · Los dos equipos no coincidieron en ese torneo</p>
+      </div>`;
+    return;
+  }
+
+  const pctA   = h2h.count ? Math.round((h2h.winsA / h2h.count) * 100) : 0;
+  const pctB   = h2h.count ? Math.round((h2h.winsB / h2h.count) * 100) : 0;
+  const avgGoalsA = h2h.count ? (h2h.goalsA / h2h.count).toFixed(1) : "–";
+  const avgGoalsB = h2h.count ? (h2h.goalsB / h2h.count).toFixed(1) : "–";
+
+  const encountersHTML = h2h.lastEncounters.length > 0 ? `
+    <div class="h2h-encounters">
+      <div class="h2h-encounter-row h2h-encounter-row--header">
+        <span>Fecha</span>
+        <span class="h2h-enc-name">${teamA.flag} ${teamA.name}</span>
+        <span class="h2h-enc-score">Resultado</span>
+        <span class="h2h-enc-name h2h-enc-right">${teamB.flag} ${teamB.name}</span>
+      </div>
+      ${h2h.lastEncounters.map(e => {
+        const cls = e.winner === "A" ? "h2h-score--a" : e.winner === "B" ? "h2h-score--b" : "h2h-score--d";
+        const dateStr = e.date
+          ? new Date(e.date + "T00:00:00Z").toLocaleDateString("es-AR", { day: "2-digit", month: "short", year: "numeric", timeZone: "UTC" })
+          : "–";
+        const stageStr = e.stage ? ` · ${e.stage}` : "";
+        return `
+          <div class="h2h-encounter-row">
+            <span class="h2h-enc-date">${dateStr}<span class="h2h-enc-stage">${stageStr}</span></span>
+            <span class="h2h-enc-name">${e.goalsA}</span>
+            <span class="h2h-enc-score ${cls}">${e.goalsA}–${e.goalsB}</span>
+            <span class="h2h-enc-name h2h-enc-right">${e.goalsB}</span>
+          </div>`;
+      }).join("")}
+    </div>` : "";
+
+  content.innerHTML = `
+    <div class="h2h-record">
+      <div class="h2h-side h2h-side--a">
+        <div class="h2h-team-label">${teamA.flag} ${teamA.name}</div>
+        <div class="h2h-wins h2h-wins--a">${h2h.winsA}</div>
+        <div class="h2h-side-label">victorias (${pctA}%)</div>
+      </div>
+      <div class="h2h-draws-col">
+        <div class="h2h-total">${h2h.count} partido${h2h.count !== 1 ? "s" : ""}</div>
+        <div class="h2h-draws">${h2h.draws}</div>
+        <div class="h2h-side-label">empates</div>
+      </div>
+      <div class="h2h-side h2h-side--b">
+        <div class="h2h-team-label">${teamB.flag} ${teamB.name}</div>
+        <div class="h2h-wins h2h-wins--b">${h2h.winsB}</div>
+        <div class="h2h-side-label">victorias (${pctB}%)</div>
+      </div>
+    </div>
+    <div class="h2h-goals">
+      <span>${teamA.flag} <strong>${h2h.goalsA}</strong> goles totales · ${avgGoalsA}/partido</span>
+      <span>${teamB.flag} <strong>${h2h.goalsB}</strong> goles totales · ${avgGoalsB}/partido</span>
+    </div>
+    ${encountersHTML}`;
 }
 
 // ── Score Grid ────────────────────────────────────────────────────────────────

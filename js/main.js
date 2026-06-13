@@ -9,11 +9,12 @@
  *   5. Conectar eventos UI
  */
 
-import { getTeams }                            from "./data/provider.js";
-import { analyzeMatch, DEFAULT_WEIGHTS }       from "./models/aggregator.js";
-import { analyzeOdds }                         from "./models/odds.js";
-import { calibrateWeights, runBacktest }       from "./models/calibrator.js";
-import { strengthLabel }                       from "./models/elo.js";
+import { getTeams, getHistoricalMatches }        from "./data/provider.js";
+import { analyzeMatch, DEFAULT_WEIGHTS }         from "./models/aggregator.js";
+import { analyzeOdds }                           from "./models/odds.js";
+import { calibrateWeights, runBacktest }         from "./models/calibrator.js";
+import { strengthLabel }                         from "./models/elo.js";
+import { computeHeadToHead }                     from "./models/headToHead.js";
 import {
   renderTeamPreview,
   renderResults,
@@ -32,7 +33,8 @@ let _lastTeamA  = null;
 let _lastTeamB  = null;
 
 // Caché local de equipos para lookups síncronos en event handlers
-let _teamsCache = new Map();
+let _teamsCache  = new Map();
+let _matchesArr  = [];
 
 // ── Bootstrap ────────────────────────────────────────────────────────────────
 
@@ -49,11 +51,12 @@ let _teamsCache = new Map();
   // Mostrar métricas en el banner
   renderModelMetrics({ bestWeights, calibratedMetrics, defaultMetrics });
 
-  // 2. Cargar equipos (async — mock resuelve inmediatamente; API puede tardar)
-  const teams = await getTeams();
+  // 2. Cargar equipos y partidos históricos en paralelo
+  const [teams, matches] = await Promise.all([getTeams(), getHistoricalMatches()]);
 
   // Caché para lookups O(1) en event handlers sin re-llamar al provider
   _teamsCache = new Map(teams.map(t => [t.id, t]));
+  _matchesArr = matches;
 
   // 3. UI
   const selectA    = document.getElementById("teamA");
@@ -101,13 +104,14 @@ function setupListeners(selectA, selectB, btn, weights) {
 
     setTimeout(() => {
       const result = analyzeMatch(teamA, teamB, weights);
+      const h2h    = computeHeadToHead(teamA.id, teamB.id, _matchesArr);
 
       // Guardar estado para el comparador de cuotas
       _lastResult = result;
       _lastTeamA  = teamA;
       _lastTeamB  = teamB;
 
-      renderResults(teamA, teamB, result);
+      renderResults(teamA, teamB, result, h2h);
       showOddsComparator(teamA, teamB);
 
       btn.textContent = "Analizar Partido";
