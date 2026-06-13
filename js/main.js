@@ -27,6 +27,10 @@ window._eloUtils = { strengthLabel };
 (function init() {
   // 1. Calibración (síncrona — corre sobre datos en memoria, rápido)
   const calibration      = calibrateWeights();
+
+  console.log("=== CALIBRATION ===");
+  console.log(calibration);
+
   const bestWeights      = calibration[0].weights;
   const defaultMetrics   = runBacktest(DEFAULT_WEIGHTS);
   const calibratedMetrics = runBacktest(bestWeights);
