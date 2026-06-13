@@ -1,48 +1,66 @@
 /**
  * App Entry Point
- * Wires the UI dropdowns → analysis engine → dashboard renderer.
+ *
+ * Orden de inicialización:
+ *   1. Calibración de pesos (grid search sobre datos históricos)
+ *   2. Mostrar métricas del modelo en el banner
+ *   3. Poblar dropdowns
+ *   4. Conectar eventos UI
  */
 
-import { getAllTeams, getTeamById } from "./data/teams.js";
-import { analyzeMatch }             from "./models/aggregator.js";
-import { strengthLabel }            from "./models/elo.js";
+import { getAllTeams, getTeamById }        from "./data/teams.js";
+import { analyzeMatch, DEFAULT_WEIGHTS }   from "./models/aggregator.js";
+import { calibrateWeights, runBacktest }   from "./models/calibrator.js";
+import { strengthLabel }                   from "./models/elo.js";
 import {
   renderTeamPreview,
   renderResults,
+  renderModelMetrics,
   setupMethodologyToggle,
 } from "./ui/dashboard.js";
 
-// Expose strengthLabel so dashboard can use it without circular imports
+// Exponer para uso en dashboard sin circular imports
 window._eloUtils = { strengthLabel };
 
-// ── bootstrap ─────────────────────────────────────────────────────────────────
+// ── Bootstrap ────────────────────────────────────────────────────────────────
 
 (function init() {
-  const teams   = getAllTeams();
-  const selectA = document.getElementById("teamA");
-  const selectB = document.getElementById("teamB");
+  // 1. Calibración (síncrona — corre sobre datos en memoria, rápido)
+  const calibration      = calibrateWeights();
+  const bestWeights      = calibration[0].weights;
+  const defaultMetrics   = runBacktest(DEFAULT_WEIGHTS);
+  const calibratedMetrics = runBacktest(bestWeights);
+
+  // Exponer métricas para el panel de transparencia
+  window._modelState = { bestWeights, defaultMetrics, calibratedMetrics };
+
+  // Mostrar métricas en el banner
+  renderModelMetrics({ bestWeights, calibratedMetrics, defaultMetrics });
+
+  // 2. UI
+  const teams      = getAllTeams();
+  const selectA    = document.getElementById("teamA");
+  const selectB    = document.getElementById("teamB");
   const btnAnalyze = document.getElementById("btnAnalyze");
 
   populateSelects(teams, selectA, selectB);
-  setupListeners(teams, selectA, selectB, btnAnalyze);
+  setupListeners(teams, selectA, selectB, btnAnalyze, bestWeights);
   setupMethodologyToggle();
 })();
 
-// ── populate dropdowns ────────────────────────────────────────────────────────
+// ── Populate dropdowns ────────────────────────────────────────────────────────
 
 function populateSelects(teams, selectA, selectB) {
-  const optionHTML = teams
+  const html = teams
     .map(t => `<option value="${t.id}">${t.flag} ${t.name} (ELO ${t.elo})</option>`)
     .join("");
-
-  [selectA, selectB].forEach(sel => {
-    sel.innerHTML = `<option value="">— Seleccionar equipo —</option>` + optionHTML;
-  });
+  const placeholder = `<option value="">— Seleccionar equipo —</option>`;
+  [selectA, selectB].forEach(sel => { sel.innerHTML = placeholder + html; });
 }
 
-// ── event listeners ───────────────────────────────────────────────────────────
+// ── Event Listeners ───────────────────────────────────────────────────────────
 
-function setupListeners(teams, selectA, selectB, btn) {
+function setupListeners(teams, selectA, selectB, btn, weights) {
   selectA.addEventListener("change", () => {
     renderTeamPreview(getTeamById(selectA.value), "previewA");
     updateButton(selectA, selectB, btn);
@@ -61,21 +79,19 @@ function setupListeners(teams, selectA, selectB, btn) {
     if (!teamA || !teamB || teamA.id === teamB.id) return;
 
     btn.textContent = "Calculando…";
-    btn.disabled = true;
+    btn.disabled    = true;
 
-    // Defer to let UI repaint before computation
     setTimeout(() => {
-      const result = analyzeMatch(teamA, teamB);
+      const result = analyzeMatch(teamA, teamB, weights);
       renderResults(teamA, teamB, result);
       btn.textContent = "Analizar Partido";
-      btn.disabled = false;
+      btn.disabled    = false;
     }, 50);
   });
 }
 
 function updateButton(selectA, selectB, btn) {
-  const valid = selectA.value && selectB.value && selectA.value !== selectB.value;
-  btn.disabled = !valid;
+  btn.disabled = !(selectA.value && selectB.value && selectA.value !== selectB.value);
 }
 
 function preventSameTeam(selectA, selectB) {

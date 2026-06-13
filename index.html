@@ -24,6 +24,32 @@
 
   <main class="main">
 
+    <!-- ── Model Quality Banner (populated on load) ──────────── -->
+    <div class="card metrics-banner" id="metricsBanner" style="display:none">
+      <div class="metrics-header">
+        <span class="metrics-title">Calidad del Modelo</span>
+        <span class="badge badge--info">Calibrado · ELO + Poisson Dixon-Coles + Forma</span>
+      </div>
+      <div class="metrics-grid">
+        <div class="metrics-item">
+          <span class="metrics-label">Brier Score</span>
+          <div id="metricBS" class="metrics-value"></div>
+        </div>
+        <div class="metrics-item">
+          <span class="metrics-label">Skill Score</span>
+          <div id="metricBSS" class="metrics-value"></div>
+        </div>
+        <div class="metrics-item">
+          <span class="metrics-label">Pesos óptimos</span>
+          <div id="metricWeights" class="metrics-value"></div>
+        </div>
+        <div class="metrics-item">
+          <span class="metrics-label">Muestra histórica</span>
+          <div id="metricN" class="metrics-value"></div>
+        </div>
+      </div>
+    </div>
+
     <!-- ── Team Selector ──────────────────────────────────────── -->
     <section class="card selector-card">
       <h2 class="section-title">Seleccionar Partido</h2>
@@ -61,32 +87,35 @@
         </div>
       </div>
 
-      <!-- probability cards -->
+      <!-- probability cards (con CI slots) -->
       <div class="prob-grid">
         <div class="prob-card card" id="probA">
           <div class="prob-card__label" id="labelA"></div>
           <div class="prob-card__value" id="valueA"></div>
           <div class="prob-track"><div class="prob-fill" id="barA"></div></div>
           <div class="prob-card__tag">Victoria</div>
+          <div class="prob-card__ci" id="ciA"></div>
         </div>
         <div class="prob-card card" id="probDraw">
           <div class="prob-card__label" id="labelDraw"></div>
           <div class="prob-card__value" id="valueDraw"></div>
           <div class="prob-track"><div class="prob-fill prob-fill--draw" id="barDraw"></div></div>
           <div class="prob-card__tag">Empate</div>
+          <div class="prob-card__ci" id="ciDraw"></div>
         </div>
         <div class="prob-card card" id="probB">
           <div class="prob-card__label" id="labelB"></div>
           <div class="prob-card__value" id="valueB"></div>
           <div class="prob-track"><div class="prob-fill prob-fill--b" id="barB"></div></div>
           <div class="prob-card__tag">Victoria</div>
+          <div class="prob-card__ci" id="ciB"></div>
         </div>
       </div>
 
       <!-- stats strip -->
       <div class="stats-grid">
         <div class="card stats-card">
-          <h3 class="card-title">Goles Esperados</h3>
+          <h3 class="card-title">Goles Esperados (λ)</h3>
           <div id="goalsComparison"></div>
         </div>
         <div class="card stats-card">
@@ -102,7 +131,7 @@
       <!-- score distribution -->
       <div class="card">
         <h3 class="card-title">Marcadores Más Probables</h3>
-        <p class="card-subtitle">Los 12 marcadores con mayor probabilidad según el modelo Poisson</p>
+        <p class="card-subtitle">Top 12 · Poisson con corrección Dixon-Coles (ρ = −0.13)</p>
         <div class="scores-grid" id="scoresGrid"></div>
       </div>
 
@@ -132,7 +161,7 @@
   </main>
 
   <footer class="footer">
-    <p>Mundial Stats · Modelos: ELO + Poisson + Forma reciente · Datos de demostración</p>
+    <p>Mundial Stats · ELO + Poisson Dixon-Coles + Forma reciente · Datos de demostración</p>
   </footer>
 
   <script type="module" src="js/main.js"></script>

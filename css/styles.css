@@ -610,6 +610,74 @@ code {
   line-height: 1.6;
 }
 
+/* ── Model Metrics Banner ────────────────────────────────────────────────────── */
+.metrics-banner {
+  padding: 16px 24px;
+}
+
+.metrics-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.metrics-title {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.metrics-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.metrics-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-faint);
+}
+
+.metrics-value {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.3;
+}
+
+.metrics-value small {
+  display: block;
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--text-muted);
+  margin-top: 1px;
+}
+
+.metric--good { color: var(--green); }
+.metric--ok   { color: var(--yellow-light); }
+.metric--bad  { color: var(--red); }
+
+/* ── Probability Card CI ─────────────────────────────────────────────────────── */
+.prob-card__ci {
+  font-size: 11px;
+  color: var(--text-faint);
+  margin-top: 6px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
 /* ── Footer ──────────────────────────────────────────────────────────────────── */
 .footer {
   text-align: center;
@@ -654,6 +722,10 @@ code {
   .compare-label, .form-team-name {
     width: 90px;
     font-size: 12px;
+  }
+
+  .metrics-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
