@@ -1058,6 +1058,147 @@ code {
   line-height: 1.6;
 }
 
+/* ── Advanced Stats Card ─────────────────────────────────────────────────────── */
+.adv-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.adv-block {
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.adv-block--red {
+  border-color: rgba(248, 81, 73, 0.3);
+  background: rgba(248, 81, 73, 0.05);
+}
+
+.adv-block__label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+.adv-teams-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.adv-team-stat {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.adv-team-stat--right {
+  flex-direction: row-reverse;
+}
+
+.adv-flag { font-size: 16px; line-height: 1; }
+
+.adv-val {
+  font-size: 20px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+
+.adv-total {
+  font-size: 11px;
+  color: var(--text-faint);
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* Over/Under pills for corners */
+.adv-ou-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.adv-ou-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-faint);
+}
+
+.adv-ou-pills {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.adv-ou-pill {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 5px 10px;
+  min-width: 56px;
+}
+
+.adv-ou-line {
+  font-size: 10px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  color: var(--text-faint);
+}
+
+.adv-prob {
+  font-size: 13px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.adv-prob--high { color: var(--green); }
+.adv-prob--mid  { color: var(--yellow-light); }
+.adv-prob--low  { color: var(--text-muted); }
+
+/* Red card row */
+.adv-red-row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.adv-red-val {
+  font-size: 24px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.adv-red-note {
+  font-size: 12px;
+  color: var(--text-faint);
+}
+
+.adv-disclaimer {
+  font-size: 11px;
+  color: var(--text-faint);
+  line-height: 1.5;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+
+.adv-disclaimer em { color: var(--text-muted); font-style: normal; font-weight: 600; }
+
 /* ── Groups Section ──────────────────────────────────────────────────────────── */
 .groups-section {
   display: flex;
@@ -1302,6 +1443,8 @@ code {
 
   .groups-grid { grid-template-columns: repeat(2, 1fr); }
   .groups-search { width: 140px; }
+
+  .adv-grid { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 400px) {

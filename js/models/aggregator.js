@@ -36,6 +36,7 @@ import { expectedGoals, scoreMatrix, matchProbabilities,
          goalDistributionStats, expectedGoalsFromMatrix }     from "./poisson.js";
 import { formIndex, formFactor, formLabel, formDots }         from "./form.js";
 import { TEAMS_DATA }                                         from "../data/teams.js";
+import { analyzeDiscipline }                                  from "./matchDisciplineStats.js";
 
 export const DEFAULT_WEIGHTS = { elo: 0.45, poisson: 0.55 };
 const N_SAMPLE = 20; // partidos asumidos para estimar promedios de goles
@@ -167,6 +168,7 @@ export function analyzeMatch(teamA, teamB, weights = DEFAULT_WEIGHTS) {
     },
     poisson,
     topScores: topScores(matrix),
+    advancedStats: analyzeDiscipline(teamA.id, teamB.id),
     breakdown: {
       weights:          w,
       eloComponent:     eloProbs,

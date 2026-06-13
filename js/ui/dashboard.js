@@ -102,6 +102,7 @@ export function renderResults(teamA, teamB, result, h2h = null) {
   renderElo(teamA, teamB, result);
   renderForm(teamA, teamB, result);
   renderScoreGrid(teamA, teamB, result.topScores);
+  renderAdvancedStats(teamA, teamB, result.advancedStats);
   renderMethodology(teamA, teamB, result);
 
   $("resultsSection").style.display = "block";
@@ -305,6 +306,112 @@ function renderScoreGrid(teamA, teamB, scores) {
       <span class="score-cell__prob">${pct(s.prob)}</span>
     </div>`;
   }).join("");
+}
+
+// ── Advanced Stats ────────────────────────────────────────────────────────────
+
+function renderAdvancedStats(teamA, teamB, stats) {
+  const card = $("advancedStatsCard");
+  if (!card || !stats) return;
+
+  const f1 = n => n.toFixed(1);
+  const pct1 = n => `${(n * 100).toFixed(1)}%`;
+
+  const overClass = p =>
+    p >= 0.60 ? "adv-prob--high" : p >= 0.40 ? "adv-prob--mid" : "adv-prob--low";
+
+  const redClass = p =>
+    p >= 0.15 ? "adv-prob--high" : p >= 0.08 ? "adv-prob--mid" : "adv-prob--low";
+
+  const { corners, fouls, yellowCards, redCardProbability, dataQuality } = stats;
+
+  card.innerHTML = `
+    <h3 class="card-title">Estadísticas Avanzadas</h3>
+
+    <div class="adv-grid">
+
+      <!-- Córners -->
+      <div class="adv-block">
+        <div class="adv-block__label">Córners esperados</div>
+        <div class="adv-teams-row">
+          <div class="adv-team-stat">
+            <span class="adv-flag">${teamA.flag}</span>
+            <span class="adv-val">${f1(corners.expectedA)}</span>
+          </div>
+          <div class="adv-total">${f1(corners.expectedTotal)} total</div>
+          <div class="adv-team-stat adv-team-stat--right">
+            <span class="adv-val">${f1(corners.expectedB)}</span>
+            <span class="adv-flag">${teamB.flag}</span>
+          </div>
+        </div>
+        <div class="adv-ou-row">
+          <span class="adv-ou-label">Over/Under córners</span>
+          <div class="adv-ou-pills">
+            <span class="adv-ou-pill">
+              <span class="adv-ou-line">+8.5</span>
+              <span class="adv-prob ${overClass(corners.over85)}">${pct1(corners.over85)}</span>
+            </span>
+            <span class="adv-ou-pill">
+              <span class="adv-ou-line">+9.5</span>
+              <span class="adv-prob ${overClass(corners.over95)}">${pct1(corners.over95)}</span>
+            </span>
+            <span class="adv-ou-pill">
+              <span class="adv-ou-line">+10.5</span>
+              <span class="adv-prob ${overClass(corners.over105)}">${pct1(corners.over105)}</span>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Faltas -->
+      <div class="adv-block">
+        <div class="adv-block__label">Faltas esperadas</div>
+        <div class="adv-teams-row">
+          <div class="adv-team-stat">
+            <span class="adv-flag">${teamA.flag}</span>
+            <span class="adv-val">${f1(fouls.expectedA)}</span>
+          </div>
+          <div class="adv-total">${f1(fouls.expectedTotal)} total</div>
+          <div class="adv-team-stat adv-team-stat--right">
+            <span class="adv-val">${f1(fouls.expectedB)}</span>
+            <span class="adv-flag">${teamB.flag}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Amarillas -->
+      <div class="adv-block">
+        <div class="adv-block__label">Amarillas esperadas</div>
+        <div class="adv-teams-row">
+          <div class="adv-team-stat">
+            <span class="adv-flag">${teamA.flag}</span>
+            <span class="adv-val">${f1(yellowCards.expectedA)}</span>
+          </div>
+          <div class="adv-total">${f1(yellowCards.expectedTotal)} total</div>
+          <div class="adv-team-stat adv-team-stat--right">
+            <span class="adv-val">${f1(yellowCards.expectedB)}</span>
+            <span class="adv-flag">${teamB.flag}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Roja -->
+      <div class="adv-block adv-block--red">
+        <div class="adv-block__label">Prob. tarjeta roja</div>
+        <div class="adv-red-row">
+          <span class="adv-red-val ${redClass(redCardProbability)}">${pct1(redCardProbability)}</span>
+          <span class="adv-red-note">al menos una en el partido</span>
+        </div>
+      </div>
+
+    </div>
+
+    <p class="adv-disclaimer">
+      ⚠ Estimaciones estadísticas basadas en datos históricos disponibles.
+      Valores marcados como <em>${dataQuality}</em>. No son garantía de resultado.
+    </p>`;
+
+  card.style.display = "block";
 }
 
 // ── Methodology Panel ─────────────────────────────────────────────────────────
