@@ -1,35 +1,39 @@
 /**
- * Poisson Distribution Engine — con corrección Dixon-Coles
+ * Poisson Distribution Engine — completo con Dixon-Coles y estadísticas derivadas
  *
- * El modelo Poisson estándar subestima empates (0-0, 1-1) y sobreestima
- * resultados ajustados (1-0, 0-1). Dixon y Coles (1997) propusieron un
- * factor de corrección τ aplicado SOLO a marcadores de suma ≤ 1:
+ * ── Modelo base ──────────────────────────────────────────────────────────────
  *
- *   τ(0,0) = 1 − λ_A · λ_B · ρ   → sube P(0-0)
- *   τ(1,0) = 1 + λ_B · ρ          → baja P(1-0)
- *   τ(0,1) = 1 + λ_A · ρ          → baja P(0-1)
- *   τ(1,1) = 1 − ρ                 → sube P(1-1)
- *   τ(i,j) = 1  para todo i+j ≥ 2
+ * Los goles son eventos discretos, independientes y relativamente raros →
+ * distribución Poisson. Dado λ_A y λ_B (goles esperados por equipo), la
+ * probabilidad de cualquier marcador (i, j) es:
  *
- * Con ρ = −0.13 (empírico en fútbol internacional):
- *   - 0-0 aumenta ≈ +13% · λ_A · λ_B
- *   - 1-1 aumenta ≈ +13%
- *   - 1-0 / 0-1 se reducen ligeramente
+ *   P(A=i, B=j) = P(A=i; λ_A) · P(B=j; λ_B)
+ *               = [e^(-λ_A) · λ_A^i / i!] · [e^(-λ_B) · λ_B^j / j!]
  *
- * Ref: Dixon & Coles (1997) "Modelling Association Football Scores"
- *      Applied Statistics 46(2), 265-280.
+ * ── Corrección Dixon-Coles ───────────────────────────────────────────────────
+ *
+ * El Poisson independiente subestima sistemáticamente empates 0-0 y 1-1.
+ * La corrección τ se aplica solo para i+j ≤ 1 (basada en el parámetro ρ < 0):
+ *
+ *   τ(0,0) = 1 − λ_A·λ_B·ρ   → P(0-0) sube
+ *   τ(1,0) = 1 + λ_B·ρ        → P(1-0) baja
+ *   τ(0,1) = 1 + λ_A·ρ        → P(0-1) baja
+ *   τ(1,1) = 1 − ρ             → P(1-1) sube
+ *   τ(i,j) = 1  si i+j ≥ 2
+ *
+ * La matriz se renormaliza tras aplicar τ para garantizar Σ P[i][j] = 1.
+ *
+ * Ref: Dixon & Coles (1997), Applied Statistics 46(2), 265-280.
  */
 
-const MAX_GOALS = 8;
+export const MAX_GOALS = 8;   // truncación: cubre >99.9% de resultados reales
+export const RHO       = -0.13; // correlación DC empírica
 
-/** Correlation parameter: empíricamente negativo en fútbol internacional */
-export const RHO = -0.13;
-
-// ── Matemática base ──────────────────────────────────────────────────────────
+// ── Matemática interna ───────────────────────────────────────────────────────
 
 /**
- * P(X = k) para Poisson(λ) usando log-espacio para evitar overflow.
- * Log(k!) se calcula iterativamente (seguro para k ≤ MAX_GOALS).
+ * P(X = k) para Poisson(λ) en log-espacio (evita overflow para k grande).
+ * log P = −λ + k·ln(λ) − ln(k!)
  */
 function poissonPMF(lambda, k) {
   if (lambda <= 0) return k === 0 ? 1 : 0;
@@ -38,10 +42,6 @@ function poissonPMF(lambda, k) {
   return Math.exp(logP);
 }
 
-/**
- * Factor de corrección Dixon-Coles τ para el marcador (i, j).
- * Para i+j ≥ 2, τ = 1 (sin corrección).
- */
 function dixonColesTau(i, j, lambdaA, lambdaB, rho = RHO) {
   if (i === 0 && j === 0) return 1 - lambdaA * lambdaB * rho;
   if (i === 1 && j === 0) return 1 + lambdaB * rho;
@@ -53,58 +53,74 @@ function dixonColesTau(i, j, lambdaA, lambdaB, rho = RHO) {
 // ── Goles esperados ──────────────────────────────────────────────────────────
 
 /**
- * λ por equipo usando índices de fuerza normalizados por la media global.
+ * λ de cada equipo como producto de índices de fuerza normalizados.
  *
- *   λ_A = (GF_A/avg) × (GC_B/avg) × avg
+ *   λ_A = (GF_A / μ) × (GC_B / μ) × μ
+ *        = ataque_A × defensa_B_inversa × μ
  *
- * Al dividir por avg y volver a multiplicar, el producto de índices es
- * independiente de la unidad — solo importa la relación relativa entre equipos.
+ * Al normalizar por μ (media global), los índices son adimensionales y
+ * el modelo es invariante a la inflación de goles entre torneos/épocas.
  */
 export function expectedGoals(teamA, teamB, globalAvg) {
-  const attackA  = teamA.avgGoalsFor     / globalAvg;
-  const defenseA = teamA.avgGoalsAgainst / globalAvg;
-  const attackB  = teamB.avgGoalsFor     / globalAvg;
-  const defenseB = teamB.avgGoalsAgainst / globalAvg;
-
+  const atkA = teamA.avgGoalsFor     / globalAvg;
+  const defA = teamA.avgGoalsAgainst / globalAvg; // <1 = defensa buena
+  const atkB = teamB.avgGoalsFor     / globalAvg;
+  const defB = teamB.avgGoalsAgainst / globalAvg;
   return {
-    lambdaA: attackA * defenseB * globalAvg,
-    lambdaB: attackB * defenseA * globalAvg,
+    lambdaA: atkA * defB * globalAvg,
+    lambdaB: atkB * defA * globalAvg,
   };
 }
 
-// ── Matriz de marcadores ─────────────────────────────────────────────────────
+// ── Matrices de marcadores ───────────────────────────────────────────────────
 
 /**
- * P[i][j] = probabilidad de que A anote i goles y B anote j goles.
- * Se aplica corrección Dixon-Coles y se renormaliza para que sume 1.
+ * Matriz con corrección Dixon-Coles (producción).
+ * P[i][j] = probabilidad del marcador i-j, renormalizada.
  */
 export function scoreMatrix(lambdaA, lambdaB) {
   const matrix = [];
   let total = 0;
-
   for (let i = 0; i <= MAX_GOALS; i++) {
     matrix[i] = [];
     for (let j = 0; j <= MAX_GOALS; j++) {
       const raw = poissonPMF(lambdaA, i) * poissonPMF(lambdaB, j);
-      const tau = dixonColesTau(i, j, lambdaA, lambdaB);
-      matrix[i][j] = Math.max(0, raw * tau); // nunca negativo
+      matrix[i][j] = Math.max(0, raw * dixonColesTau(i, j, lambdaA, lambdaB));
       total += matrix[i][j];
     }
   }
-
-  // Renormalizar: la corrección τ rompe la suma exacta a 1
-  for (let i = 0; i <= MAX_GOALS; i++) {
-    for (let j = 0; j <= MAX_GOALS; j++) {
+  for (let i = 0; i <= MAX_GOALS; i++)
+    for (let j = 0; j <= MAX_GOALS; j++)
       matrix[i][j] /= total;
-    }
-  }
-
   return matrix;
 }
 
-// ── Probabilidades agregadas ─────────────────────────────────────────────────
+/**
+ * Matriz Poisson sin corrección (para comparación en validación).
+ * Útil para cuantificar el efecto de Dixon-Coles.
+ */
+export function scoreMatrixRaw(lambdaA, lambdaB) {
+  const matrix = [];
+  let total = 0;
+  for (let i = 0; i <= MAX_GOALS; i++) {
+    matrix[i] = [];
+    for (let j = 0; j <= MAX_GOALS; j++) {
+      matrix[i][j] = poissonPMF(lambdaA, i) * poissonPMF(lambdaB, j);
+      total += matrix[i][j];
+    }
+  }
+  for (let i = 0; i <= MAX_GOALS; i++)
+    for (let j = 0; j <= MAX_GOALS; j++)
+      matrix[i][j] /= total;
+  return matrix;
+}
 
-/** Suma la matriz en victoria A / empate / victoria B (ya normalizadas) */
+// ── Probabilidades de resultado ──────────────────────────────────────────────
+
+/**
+ * Suma la matriz en tres resultados mutuamente excluyentes y exhaustivos.
+ * Renormalización de seguridad: garantiza suma exacta = 1.0.
+ */
 export function matchProbabilities(matrix) {
   let pA = 0, pDraw = 0, pB = 0;
   for (let i = 0; i <= MAX_GOALS; i++) {
@@ -114,20 +130,92 @@ export function matchProbabilities(matrix) {
       else              pB    += matrix[i][j];
     }
   }
-  // La suma debería ser ≈1 ya; renormalizamos por seguridad numérica
   const t = pA + pDraw + pB;
   return { pA: pA / t, pDraw: pDraw / t, pB: pB / t };
 }
 
-// ── Marcadores top ───────────────────────────────────────────────────────────
+// ── Estadísticas derivadas de la matriz ─────────────────────────────────────
 
-/** Devuelve los n marcadores más probables, ordenados descendentemente */
-export function topScores(matrix, n = 12) {
-  const list = [];
+/**
+ * Goles esperados recuperados desde la matriz.
+ * Deben aproximar λ_A y λ_B (diferencia < 0.01 por truncación en MAX_GOALS).
+ */
+export function expectedGoalsFromMatrix(matrix) {
+  let expA = 0, expB = 0;
   for (let i = 0; i <= MAX_GOALS; i++) {
     for (let j = 0; j <= MAX_GOALS; j++) {
-      list.push({ goalsA: i, goalsB: j, prob: matrix[i][j] });
+      expA += i * matrix[i][j];
+      expB += j * matrix[i][j];
     }
   }
+  return { expA, expB };
+}
+
+/**
+ * Distribuciones marginales de goles por equipo.
+ * margA[k] = P(A anota exactamente k goles), independiente de B.
+ */
+export function marginalDistributions(matrix) {
+  const A = new Array(MAX_GOALS + 1).fill(0);
+  const B = new Array(MAX_GOALS + 1).fill(0);
+  for (let i = 0; i <= MAX_GOALS; i++) {
+    for (let j = 0; j <= MAX_GOALS; j++) {
+      A[i] += matrix[i][j];
+      B[j] += matrix[i][j];
+    }
+  }
+  return { A, B };
+}
+
+/**
+ * P(total de goles > threshold) — mercado de Over/Under.
+ * threshold = 2.5 es el más común en fútbol.
+ */
+export function overUnder(matrix, threshold = 2.5) {
+  let pOver = 0;
+  for (let i = 0; i <= MAX_GOALS; i++)
+    for (let j = 0; j <= MAX_GOALS; j++)
+      if (i + j > threshold) pOver += matrix[i][j];
+  return { pOver, pUnder: 1 - pOver, threshold };
+}
+
+/**
+ * P(ambos equipos anotan al menos 1 gol).
+ * Equivalente a P(A≥1) × P(B≥1) en Poisson independiente,
+ * pero calculado exactamente desde la matriz conjunta.
+ */
+export function bothTeamsScore(matrix) {
+  let p = 0;
+  for (let i = 1; i <= MAX_GOALS; i++)
+    for (let j = 1; j <= MAX_GOALS; j++)
+      p += matrix[i][j];
+  return p;
+}
+
+/**
+ * Media, varianza y desviación estándar del total de goles.
+ * Útil para entender la dispersión del marcador esperado.
+ */
+export function goalDistributionStats(matrix) {
+  let mean = 0, variance = 0;
+  for (let i = 0; i <= MAX_GOALS; i++)
+    for (let j = 0; j <= MAX_GOALS; j++)
+      mean += (i + j) * matrix[i][j];
+
+  for (let i = 0; i <= MAX_GOALS; i++)
+    for (let j = 0; j <= MAX_GOALS; j++)
+      variance += Math.pow((i + j) - mean, 2) * matrix[i][j];
+
+  return { mean, variance, stddev: Math.sqrt(variance) };
+}
+
+// ── Marcadores destacados ────────────────────────────────────────────────────
+
+/** Top n marcadores ordenados por probabilidad descendente */
+export function topScores(matrix, n = 12) {
+  const list = [];
+  for (let i = 0; i <= MAX_GOALS; i++)
+    for (let j = 0; j <= MAX_GOALS; j++)
+      list.push({ goalsA: i, goalsB: j, prob: matrix[i][j] });
   return list.sort((a, b) => b.prob - a.prob).slice(0, n);
 }

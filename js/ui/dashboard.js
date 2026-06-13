@@ -225,8 +225,10 @@ function renderMethodology(teamA, teamB, result) {
     <div class="meth-section">
       <h4 class="meth-title">1 — Motor ELO (peso: ${pct(breakdown.weights.elo)})</h4>
       <p>Diferencia de rating: <code>${teamA.elo} − ${teamB.elo} = ${teamA.elo - teamB.elo} pts</code></p>
-      <p>P(${teamA.name} gana) = 1 / (1 + 10<sup>−Δ/400</sup>) = <strong>${pct(result.elo.pA)}</strong></p>
-      <p class="meth-note">El ELO puro produce P(win) sin distinguir empates. La probabilidad de empate se toma del componente Poisson y se redistribuye proporcionalmente al split ELO.</p>
+      <p>P(${teamA.name} gana — base 2) = 1 / (1 + 10<sup>−Δ/400</sup>) = <strong>${pct(result.elo.pWinA)}</strong></p>
+      <p>Modelo de empate: P_draw = D₀·exp(−k·(ΔR/400)²) = <strong>${pct(result.elo.pDraw)}</strong> (D₀=${(0.285).toFixed(3)}, k=2.0)</p>
+      <p>Triplete ELO 3-way: Victoria A = ${pct(result.elo.pA)} · Empate = ${pct(result.elo.pDraw)} · Victoria B = ${pct(result.elo.pB)}</p>
+      <p class="meth-note">A diferencia de versiones anteriores, el ELO ahora produce su propio P(empate) mediante un modelo gaussiano calibrado (mayor P_draw cuando los equipos son más igualados). El empate ya no se "toma prestado" de Poisson.</p>
     </div>
 
     <div class="meth-section">
