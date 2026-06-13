@@ -1,0 +1,37 @@
+# Netlify configuration — sitio estático sin paso de build
+# Documentación: https://docs.netlify.com/configure-builds/file-based-configuration/
+
+[build]
+  publish = "."
+  # Sin comando de build — Vanilla JS ES Modules sin bundler.
+  # Netlify sirve el directorio raíz tal cual.
+
+# ── Headers de seguridad ──────────────────────────────────────────────────────
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options        = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy        = "strict-origin-when-cross-origin"
+    Permissions-Policy     = "geolocation=(), microphone=(), camera=()"
+
+# index.html siempre debe revalidarse (no cachear HTML entre deploys)
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+# JS y CSS: cachear agresivamente en CDN
+# ADVERTENCIA: si cambias main.js o styles.css sin renombrarlos,
+# los usuarios con caché verán la versión antigua. Para evitarlo,
+# o bien usar versioning (?v=X) en index.html o adoptar un build step.
+[[headers]]
+  for = "/js/*"
+  [headers.values]
+    Cache-Control = "public, max-age=86400"
+
+[[headers]]
+  for = "/css/*"
+  [headers.values]
+    Cache-Control = "public, max-age=86400"
