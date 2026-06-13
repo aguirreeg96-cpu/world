@@ -59,8 +59,6 @@
 
 "use strict";
 
-const path = require("path");
-
 // ── Configuración del proveedor ───────────────────────────────────────────────
 const PROVIDER_MODE = "tsdb";
 
@@ -71,15 +69,18 @@ const AF_BASE = "https://v3.football.api-sports.io"; // legacy
 const FD_BASE = "https://api.football-data.org/v4";  // legacy
 
 // ── Carga de datos locales (OpenFootball WC 2022) ─────────────────────────────
-// worldcup_2022.json está en js/data/ y se incluye en el deploy estático.
-// require() lo traza como dependencia y lo incluye en el bundle de la función.
+// El JSON vive en netlify/functions/data/wc2022.json (dentro del directorio de
+// funciones) para garantizar que esbuild lo incluya en el bundle.
+// IMPORTANTE: require() debe usar una ruta ESTÁTICA (sin path.join / __dirname
+// dinámico) para que esbuild pueda trazarlo como dependencia en tiempo de build.
+// La copia canónica para el sitio estático está en js/data/worldcup_2022.json.
 
 let WC2022 = null;
 try {
-  WC2022 = require(path.join(__dirname, "../../js/data/worldcup_2022.json"));
+  WC2022 = require("./data/wc2022.json");
   console.info(`[football-data] WC2022 cargado: ${WC2022.totalMatches} partidos, ${Object.keys(WC2022.teamStats).length} equipos`);
 } catch (err) {
-  console.warn("[football-data] worldcup_2022.json no disponible:", err.message);
+  console.warn("[football-data] data/wc2022.json no disponible:", err.message);
 }
 
 // ── Tablas estáticas ──────────────────────────────────────────────────────────
