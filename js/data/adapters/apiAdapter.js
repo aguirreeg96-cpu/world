@@ -23,10 +23,16 @@
  * ── Endpoints del proxy ───────────────────────────────────────────────────────
  *
  *   GET /.netlify/functions/football-data?resource=teams
- *       → { teams: [...], globalAvgGoals: number }
+ *       → { teams: [...48 equipos WC 2026...], globalAvgGoals: number }
+ *
+ *   GET /.netlify/functions/football-data?resource=groups
+ *       → { groups: { A: { name, teams }, ..., L: { name, teams } } }
  *
  *   GET /.netlify/functions/football-data?resource=matches
- *       → { matches: [{ home, away, goalsHome, goalsAway }] }
+ *       → { matches: [...partidos WC 2022 para H2H histórico...] }
+ *
+ *   GET /.netlify/functions/football-data?resource=matches&tournament=2026
+ *       → { matches: [...resultados WC 2026 finalizados...], allMatches: [...] }
  *
  *   GET /.netlify/functions/football-data?resource=team&id=ARG
  *       → { id, name, flag, confederation, elo, avgGoalsFor, avgGoalsAgainst, recentResults }
@@ -54,8 +60,9 @@ async function fetchProxy(resource, params = {}) {
 // ── Cache de sesión ───────────────────────────────────────────────────────────
 // Se rellena en la primera llamada a getTeams() para evitar llamadas duplicadas.
 
-let _teamsCache = null;      // { teams: [...], globalAvgGoals: number } | null
-let _matchesCache = null;    // { matches: [...] } | null
+let _teamsCache   = null;    // { teams: [...], globalAvgGoals: number } | null
+let _matchesCache = null;    // { matches: [...] } | null (WC 2022)
+let _groupsCache  = null;    // { groups: {...} } | null
 
 async function ensureTeams() {
   if (_teamsCache) return _teamsCache;
@@ -170,6 +177,32 @@ export async function getHistoricalMatches() {
   // 3. Mock — solo datos de demostración, marcadores NO reales
   console.warn("[apiAdapter] getHistoricalMatches: usando mock (datos ficticios)");
   return mockAdapter.getHistoricalMatches();
+}
+
+/**
+ * Grupos A–L del Mundial 2026.
+ * Fallback: asset estático /js/data/worldcup_2026_groups.json.
+ */
+export async function getGroups() {
+  // 1. Proxy
+  if (!_groupsCache) {
+    try {
+      _groupsCache = await fetchProxy("groups");
+    } catch (err) {
+      console.warn("[apiAdapter] getGroups proxy fallback →", err.message);
+    }
+  }
+  if (_groupsCache?.groups) return _groupsCache.groups;
+
+  // 2. Asset estático
+  try {
+    const data = await fetch("/js/data/worldcup_2026_groups.json").then(r => r.json());
+    if (data?.groups) return data.groups;
+  } catch (err) {
+    console.warn("[apiAdapter] getGroups asset fallback →", err.message);
+  }
+
+  return null;
 }
 
 /**

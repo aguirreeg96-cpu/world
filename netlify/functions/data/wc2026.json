@@ -1,0 +1,29 @@
+{
+  "tournament": "FIFA World Cup 2026",
+  "season": 2026,
+  "hosts": ["USA", "CAN", "MEX"],
+  "globalAvgGoals": 1.35,
+  "_note": "Resultados actualizados al 13-jun-2026. Partidos pendientes sin marcador.",
+  "groups": {
+    "A": { "name": "Grupo A", "teams": ["MEX", "KOR", "ZAF", "CZE"] },
+    "B": { "name": "Grupo B", "teams": ["CAN", "SUI", "QAT", "BIH"] },
+    "C": { "name": "Grupo C", "teams": ["BRA", "MAR", "SCO", "HAI"] },
+    "D": { "name": "Grupo D", "teams": ["USA", "AUS", "PAR", "TUR"] },
+    "E": { "name": "Grupo E", "teams": ["GER", "CIV", "ECU", "CUW"] },
+    "F": { "name": "Grupo F", "teams": ["NED", "JPN", "SWE", "TUN"] },
+    "G": { "name": "Grupo G", "teams": ["BEL", "IRN", "EGY", "NZL"] },
+    "H": { "name": "Grupo H", "teams": ["ESP", "URU", "KSA", "CPV"] },
+    "I": { "name": "Grupo I", "teams": ["FRA", "SEN", "NOR", "IRQ"] },
+    "J": { "name": "Grupo J", "teams": ["ARG", "AUT", "ALG", "JOR"] },
+    "K": { "name": "Grupo K", "teams": ["POR", "COL", "UZB", "COD"] },
+    "L": { "name": "Grupo L", "teams": ["ENG", "CRO", "GHA", "PAN"] }
+  },
+  "matches": [
+    { "home": "MEX", "away": "ZAF", "goalsHome": 2, "goalsAway": 0, "date": "2026-06-11", "stage": "group", "group": "A", "status": "finished" },
+    { "home": "KOR", "away": "CZE", "goalsHome": 2, "goalsAway": 1, "date": "2026-06-11", "stage": "group", "group": "A", "status": "finished" },
+    { "home": "CAN", "away": "BIH", "goalsHome": 1, "goalsAway": 1, "date": "2026-06-12", "stage": "group", "group": "B", "status": "finished" },
+    { "home": "USA", "away": "PAR", "goalsHome": 4, "goalsAway": 1, "date": "2026-06-12", "stage": "group", "group": "D", "status": "finished" },
+    { "home": "QAT", "away": "SUI", "goalsHome": null, "goalsAway": null, "date": "2026-06-13", "stage": "group", "group": "B", "status": "scheduled" },
+    { "home": "BRA", "away": "MAR", "goalsHome": null, "goalsAway": null, "date": "2026-06-13", "stage": "group", "group": "C", "status": "scheduled" }
+  ]
+}

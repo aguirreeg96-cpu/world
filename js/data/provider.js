@@ -65,3 +65,15 @@ export const getHistoricalMatches = () => Promise.resolve(adapter.getHistoricalM
  * @returns {Promise<number>}
  */
 export const getGlobalAvgGoals = () => Promise.resolve(adapter.getGlobalAvgGoals());
+
+/**
+ * Grupos A–L del Mundial 2026.
+ * Solo disponible en apiAdapter (el mockAdapter no tiene grupos).
+ * @returns {Promise<object | null>}
+ */
+export const getGroups = () => {
+  if (DATA_SOURCE === "api" && typeof apiAdapter.getGroups === "function") {
+    return apiAdapter.getGroups();
+  }
+  return Promise.resolve(null);
+};

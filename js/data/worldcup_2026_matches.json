@@ -1,0 +1,13 @@
+{
+  "tournament": "FIFA World Cup 2026",
+  "season": 2026,
+  "_note": "Actualizado al 13-jun-2026. Agregar resultados a medida que se juegan.",
+  "matches": [
+    { "home": "MEX", "away": "ZAF", "goalsHome": 2, "goalsAway": 0, "date": "2026-06-11", "stage": "group", "group": "A", "status": "finished" },
+    { "home": "KOR", "away": "CZE", "goalsHome": 2, "goalsAway": 1, "date": "2026-06-11", "stage": "group", "group": "A", "status": "finished" },
+    { "home": "CAN", "away": "BIH", "goalsHome": 1, "goalsAway": 1, "date": "2026-06-12", "stage": "group", "group": "B", "status": "finished" },
+    { "home": "USA", "away": "PAR", "goalsHome": 4, "goalsAway": 1, "date": "2026-06-12", "stage": "group", "group": "D", "status": "finished" },
+    { "home": "QAT", "away": "SUI", "goalsHome": null, "goalsAway": null, "date": "2026-06-13", "stage": "group", "group": "B", "status": "scheduled" },
+    { "home": "BRA", "away": "MAR", "goalsHome": null, "goalsAway": null, "date": "2026-06-13", "stage": "group", "group": "C", "status": "scheduled" }
+  ]
+}
