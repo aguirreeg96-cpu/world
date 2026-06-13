@@ -244,58 +244,49 @@ function renderHeadToHead(teamA, teamB, h2h) {
     return;
   }
 
-  const pctA   = h2h.count ? Math.round((h2h.winsA / h2h.count) * 100) : 0;
-  const pctB   = h2h.count ? Math.round((h2h.winsB / h2h.count) * 100) : 0;
-  const avgGoalsA = h2h.count ? (h2h.goalsA / h2h.count).toFixed(1) : "–";
-  const avgGoalsB = h2h.count ? (h2h.goalsB / h2h.count).toFixed(1) : "–";
+  // Encuentros: tabla principal (lo más importante — marcadores reales)
+  const encountersHTML = h2h.lastEncounters.map(e => {
+    const scoreCls = e.winner === "A" ? "h2h-score--a"
+                   : e.winner === "B" ? "h2h-score--b"
+                   :                    "h2h-score--d";
+    const dateStr = e.date
+      ? new Date(e.date + "T00:00:00Z").toLocaleDateString("es-AR",
+          { day: "2-digit", month: "short", year: "numeric", timeZone: "UTC" })
+      : "–";
+    const stageStr = e.stage
+      ? e.stage.charAt(0).toUpperCase() + e.stage.slice(1)
+      : "";
+    return `
+      <div class="h2h-enc-row">
+        <div class="h2h-enc-meta">
+          <span class="h2h-enc-date">${dateStr}</span>
+          ${stageStr ? `<span class="h2h-enc-stage">${stageStr}</span>` : ""}
+        </div>
+        <div class="h2h-enc-scoreline">
+          <span class="h2h-enc-team">${teamA.flag} ${teamA.name}</span>
+          <span class="h2h-enc-result ${scoreCls}">${e.goalsA} – ${e.goalsB}</span>
+          <span class="h2h-enc-team h2h-enc-team--right">${teamB.flag} ${teamB.name}</span>
+        </div>
+      </div>`;
+  }).join("");
 
-  const encountersHTML = h2h.lastEncounters.length > 0 ? `
-    <div class="h2h-encounters">
-      <div class="h2h-encounter-row h2h-encounter-row--header">
-        <span>Fecha</span>
-        <span class="h2h-enc-name">${teamA.flag} ${teamA.name}</span>
-        <span class="h2h-enc-score">Resultado</span>
-        <span class="h2h-enc-name h2h-enc-right">${teamB.flag} ${teamB.name}</span>
-      </div>
-      ${h2h.lastEncounters.map(e => {
-        const cls = e.winner === "A" ? "h2h-score--a" : e.winner === "B" ? "h2h-score--b" : "h2h-score--d";
-        const dateStr = e.date
-          ? new Date(e.date + "T00:00:00Z").toLocaleDateString("es-AR", { day: "2-digit", month: "short", year: "numeric", timeZone: "UTC" })
-          : "–";
-        const stageStr = e.stage ? ` · ${e.stage}` : "";
-        return `
-          <div class="h2h-encounter-row">
-            <span class="h2h-enc-date">${dateStr}<span class="h2h-enc-stage">${stageStr}</span></span>
-            <span class="h2h-enc-name">${e.goalsA}</span>
-            <span class="h2h-enc-score ${cls}">${e.goalsA}–${e.goalsB}</span>
-            <span class="h2h-enc-name h2h-enc-right">${e.goalsB}</span>
-          </div>`;
-      }).join("")}
-    </div>` : "";
+  // Resumen W/D/L como badges compactos (no números gigantes que confunden con marcador)
+  const pctA = Math.round((h2h.winsA / h2h.count) * 100);
+  const pctD = Math.round((h2h.draws  / h2h.count) * 100);
+  const pctB = Math.round((h2h.winsB  / h2h.count) * 100);
 
   content.innerHTML = `
-    <div class="h2h-record">
-      <div class="h2h-side h2h-side--a">
-        <div class="h2h-team-label">${teamA.flag} ${teamA.name}</div>
-        <div class="h2h-wins h2h-wins--a">${h2h.winsA}</div>
-        <div class="h2h-side-label">victorias (${pctA}%)</div>
-      </div>
-      <div class="h2h-draws-col">
-        <div class="h2h-total">${h2h.count} partido${h2h.count !== 1 ? "s" : ""}</div>
-        <div class="h2h-draws">${h2h.draws}</div>
-        <div class="h2h-side-label">empates</div>
-      </div>
-      <div class="h2h-side h2h-side--b">
-        <div class="h2h-team-label">${teamB.flag} ${teamB.name}</div>
-        <div class="h2h-wins h2h-wins--b">${h2h.winsB}</div>
-        <div class="h2h-side-label">victorias (${pctB}%)</div>
+    <div class="h2h-summary-bar">
+      <span class="h2h-sum-label">Historial · ${h2h.count} partido${h2h.count !== 1 ? "s" : ""}</span>
+      <div class="h2h-sum-badges">
+        <span class="h2h-badge h2h-badge--a">${teamA.flag} ${h2h.winsA} victorias (${pctA}%)</span>
+        <span class="h2h-badge h2h-badge--d">${h2h.draws} empates (${pctD}%)</span>
+        <span class="h2h-badge h2h-badge--b">${h2h.winsB} victorias ${teamB.flag} (${pctB}%)</span>
       </div>
     </div>
-    <div class="h2h-goals">
-      <span>${teamA.flag} <strong>${h2h.goalsA}</strong> goles totales · ${avgGoalsA}/partido</span>
-      <span>${teamB.flag} <strong>${h2h.goalsB}</strong> goles totales · ${avgGoalsB}/partido</span>
-    </div>
-    ${encountersHTML}`;
+    <div class="h2h-enc-list">
+      ${encountersHTML}
+    </div>`;
 }
 
 // ── Score Grid ────────────────────────────────────────────────────────────────
