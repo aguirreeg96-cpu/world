@@ -206,6 +206,26 @@ export async function getGroups() {
 }
 
 /**
+ * Fixtures y resultados del Mundial 2026.
+ * Fallback: asset estático /js/data/worldcup_2026_matches.json.
+ */
+export async function getMatches2026() {
+  try {
+    const data = await fetchProxy("matches", { tournament: "2026" });
+    return data.matches ?? [];
+  } catch (err) {
+    console.warn("[apiAdapter] getMatches2026 proxy fallback →", err.message);
+  }
+  try {
+    const data = await fetch("/js/data/worldcup_2026_matches.json").then(r => r.json());
+    return data.matches ?? [];
+  } catch (staticErr) {
+    console.warn("[apiAdapter] getMatches2026 asset fallback →", staticErr.message);
+    return [];
+  }
+}
+
+/**
  * Promedio global de goles (μ en el modelo Poisson).
  */
 export async function getGlobalAvgGoals() {

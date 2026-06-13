@@ -77,3 +77,17 @@ export const getGroups = () => {
   }
   return Promise.resolve(null);
 };
+
+/**
+ * Fixtures y resultados del Mundial 2026 (partidos terminados + programados).
+ * @returns {Promise<Array<MatchRecord>>}
+ */
+export const getMatches2026 = () => {
+  if (DATA_SOURCE === "api" && typeof apiAdapter.getMatches2026 === "function") {
+    return apiAdapter.getMatches2026();
+  }
+  return fetch("/js/data/worldcup_2026_matches.json")
+    .then(r => r.json())
+    .then(d => d.matches ?? [])
+    .catch(() => []);
+};

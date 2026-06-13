@@ -9,7 +9,7 @@
  *   5. Conectar eventos UI
  */
 
-import { getTeams, getHistoricalMatches }        from "./data/provider.js";
+import { getTeams, getHistoricalMatches, getGroups, getMatches2026 } from "./data/provider.js";
 import { analyzeMatch, DEFAULT_WEIGHTS }         from "./models/aggregator.js";
 import { analyzeOdds }                           from "./models/odds.js";
 import { calibrateWeights, runBacktest }         from "./models/calibrator.js";
@@ -23,6 +23,7 @@ import {
   showOddsComparator,
   renderOddsComparison,
 } from "./ui/dashboard.js";
+import { renderGroups, filterGroups } from "./ui/groupsUI.js";
 
 // Exponer para uso en dashboard sin circular imports
 window._eloUtils = { strengthLabel };
@@ -51,8 +52,13 @@ let _matchesArr  = [];
   // Mostrar métricas en el banner
   renderModelMetrics({ bestWeights, calibratedMetrics, defaultMetrics });
 
-  // 2. Cargar equipos y partidos históricos en paralelo
-  const [teams, matches] = await Promise.all([getTeams(), getHistoricalMatches()]);
+  // 2. Cargar datos en paralelo
+  const [teams, matches, groups, matches2026] = await Promise.all([
+    getTeams(),
+    getHistoricalMatches(),
+    getGroups(),
+    getMatches2026(),
+  ]);
 
   // Caché para lookups O(1) en event handlers sin re-llamar al provider
   _teamsCache = new Map(teams.map(t => [t.id, t]));
@@ -67,6 +73,8 @@ let _matchesArr  = [];
   setupListeners(selectA, selectB, btnAnalyze, bestWeights);
   setupMethodologyToggle();
   setupOddsListeners();
+  renderGroups(groups, _teamsCache, matches2026, teamId => selectTeamFromGroup(teamId, selectA, selectB, btnAnalyze));
+  setupGroupSearch();
 })();
 
 // ── Populate dropdowns ────────────────────────────────────────────────────────
@@ -158,6 +166,30 @@ function setupOddsListeners() {
     } catch (err) {
       console.error("[odds]", err.message);
     }
+  });
+}
+
+// ── Group click handler ───────────────────────────────────────────────────────
+
+function selectTeamFromGroup(teamId, selectA, selectB, btnAnalyze) {
+  if (!selectA.value) {
+    selectA.value = teamId;
+    renderTeamPreview(_teamsCache.get(teamId) ?? null, "previewA");
+  } else {
+    selectB.value = teamId;
+    renderTeamPreview(_teamsCache.get(teamId) ?? null, "previewB");
+    if (selectA.value === selectB.value) {
+      selectA.value = "";
+      renderTeamPreview(null, "previewA");
+    }
+  }
+  updateButton(selectA, selectB, btnAnalyze);
+  document.querySelector(".selector-card")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
+function setupGroupSearch() {
+  document.getElementById("groupsSearch")?.addEventListener("input", e => {
+    filterGroups(e.target.value);
   });
 }
 
