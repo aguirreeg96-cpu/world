@@ -75,6 +75,26 @@
       </button>
     </section>
 
+    <!-- ── Monte Carlo Simulator ────────────────────────────── -->
+    <section class="card sim-section" id="simSection">
+      <div class="sim-header">
+        <div>
+          <h2 class="section-title" style="margin-bottom:4px">Simulación Mundial 2026</h2>
+          <p class="card-subtitle" style="margin:0">4 grupos · 20 selecciones · ELO + Poisson + Forma</p>
+        </div>
+        <button class="btn-simulate" id="btnSimulate">🎲 Simular 10.000 torneos</button>
+      </div>
+      <div id="simLoading" class="sim-loading" style="display:none">
+        <span class="sim-spinner"></span>
+        <span>Simulando torneos…</span>
+      </div>
+      <div id="simulationResults"></div>
+      <p class="sim-disclaimer">
+        ⚠ Simulación estadística con grupos de demostración. No refleja el sorteo oficial
+        ni predice resultados reales. Sin fines de apuesta.
+      </p>
+    </section>
+
     <!-- ── Results ────────────────────────────────────────────── -->
     <section id="resultsSection" style="display:none">
 

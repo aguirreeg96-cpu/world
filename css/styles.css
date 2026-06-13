@@ -1126,3 +1126,194 @@ code {
   .scores-grid { grid-template-columns: repeat(2, 1fr); }
   .odds-inputs-row { grid-template-columns: 1fr; }
 }
+
+/* ── Monte Carlo Simulator ───────────────────────────────────────────────────── */
+
+.sim-section { padding: 24px; }
+
+.sim-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.btn-simulate {
+  flex-shrink: 0;
+  background: linear-gradient(135deg, #1f6feb 0%, #388bfd 100%);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity var(--transition), transform var(--transition);
+  white-space: nowrap;
+}
+.btn-simulate:hover:not(:disabled) { opacity: 0.88; transform: translateY(-1px); }
+.btn-simulate:disabled              { opacity: 0.45; cursor: not-allowed; transform: none; }
+
+.sim-loading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 0;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+@keyframes sim-spin {
+  to { transform: rotate(360deg); }
+}
+.sim-spinner {
+  width: 18px; height: 18px;
+  border: 2px solid var(--border);
+  border-top-color: var(--blue);
+  border-radius: 50%;
+  animation: sim-spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+/* Groups legend */
+.sim-legend {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+.sim-group-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-size: 12px;
+}
+
+.sim-group-key {
+  font-weight: 700;
+  color: var(--blue);
+  white-space: nowrap;
+}
+
+.sim-group-flags { letter-spacing: 2px; }
+
+/* Table */
+.sim-table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin-bottom: 12px;
+}
+
+.sim-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 540px;
+}
+
+.sim-thead-row {
+  border-bottom: 1px solid var(--border);
+}
+
+.sim-th {
+  padding: 8px 12px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-faint);
+  white-space: nowrap;
+}
+.sim-th--rank  { width: 36px; }
+.sim-th--main  { min-width: 160px; }
+.sim-th--sec   { width: 70px; text-align: center; }
+
+.sim-row {
+  border-bottom: 1px solid rgba(48, 54, 61, 0.5);
+  transition: background var(--transition);
+}
+.sim-row:hover          { background: rgba(255,255,255,0.03); }
+.sim-row--top           { background: rgba(56, 139, 253, 0.04); }
+.sim-row--top:hover     { background: rgba(56, 139, 253, 0.08); }
+
+.sim-td { padding: 10px 12px; vertical-align: middle; }
+
+.sim-td--rank {
+  font-size: 16px;
+  width: 36px;
+  text-align: center;
+}
+
+.sim-td--team {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.sim-flag { font-size: 20px; line-height: 1; }
+.sim-name { font-size: 14px; font-weight: 600; color: var(--text); }
+.sim-gtag {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-faint);
+  background: var(--surface-alt);
+  border-radius: 4px;
+  padding: 2px 5px;
+}
+
+.sim-td--main { min-width: 160px; }
+.sim-td--sec  { text-align: center; font-size: 13px; color: var(--text-muted); }
+
+/* Progress bar inside champion column */
+.sim-bar-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sim-bar {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--blue);
+  min-width: 2px;
+  flex-shrink: 0;
+}
+.sim-bar--champion { background: linear-gradient(90deg, #388bfd, #a371f7); }
+
+.sim-bar-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.sim-sample {
+  font-size: 11px;
+  color: var(--text-faint);
+  margin-top: 4px;
+}
+
+.sim-disclaimer {
+  font-size: 12px;
+  color: var(--text-faint);
+  border-top: 1px solid var(--border);
+  margin-top: 16px;
+  padding-top: 12px;
+  line-height: 1.5;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .sim-header { flex-direction: column; }
+  .btn-simulate { width: 100%; text-align: center; }
+  .sim-name { font-size: 13px; }
+  .sim-th--sec, .sim-td--sec { display: none; }
+}

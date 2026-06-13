@@ -1,0 +1,12 @@
+{
+  "_disclaimer": "Grupos de demostración. La distribución no refleja el sorteo oficial del Mundial 2026. Solo incluye las 20 selecciones disponibles en la app.",
+  "format": "4 grupos de 5 equipos. Top 2 de cada grupo clasifican a cuartos de final.",
+  "stages": ["group", "quarterFinal", "semiFinal", "final", "champion"],
+  "koFormat": "Cuartos: A1-D2, B1-C2, C1-B2, D1-A2 · Semifinales y Final",
+  "groups": {
+    "A": { "name": "Grupo A", "teams": ["ARG", "ENG", "JPN", "SEN", "USA"] },
+    "B": { "name": "Grupo B", "teams": ["FRA", "ESP", "CRO", "MAR", "KOR"] },
+    "C": { "name": "Grupo C", "teams": ["GER", "BRA", "URU", "NGA", "AUS"] },
+    "D": { "name": "Grupo D", "teams": ["NED", "POR", "ITA", "BEL", "MEX"] }
+  }
+}

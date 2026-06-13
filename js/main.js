@@ -15,6 +15,8 @@ import { analyzeOdds }                           from "./models/odds.js";
 import { calibrateWeights, runBacktest }         from "./models/calibrator.js";
 import { strengthLabel }                         from "./models/elo.js";
 import { computeHeadToHead }                     from "./models/headToHead.js";
+import { runMonteCarlo }                         from "./models/tournamentSimulator.js";
+import { renderSimulationResults }               from "./ui/simulationUI.js";
 import {
   renderTeamPreview,
   renderResults,
@@ -67,6 +69,7 @@ let _matchesArr  = [];
   setupListeners(selectA, selectB, btnAnalyze, bestWeights);
   setupMethodologyToggle();
   setupOddsListeners();
+  setupSimulationButton(teams, bestWeights);
 })();
 
 // ── Populate dropdowns ────────────────────────────────────────────────────────
@@ -158,6 +161,36 @@ function setupOddsListeners() {
     } catch (err) {
       console.error("[odds]", err.message);
     }
+  });
+}
+
+// ── Monte Carlo Simulation ────────────────────────────────────────────────────
+
+function setupSimulationButton(teams, weights) {
+  const btn     = document.getElementById("btnSimulate");
+  const loading = document.getElementById("simLoading");
+  if (!btn) return;
+
+  const globalAvg = window._modelState?.calibratedMetrics
+    ? 1.35
+    : 1.35;
+
+  btn.addEventListener("click", () => {
+    btn.disabled    = true;
+    loading.style.display = "flex";
+
+    setTimeout(() => {
+      try {
+        const mcResult = runMonteCarlo(teams, weights, globalAvg, 10_000);
+        renderSimulationResults(mcResult);
+        btn.textContent = "🔄 Re-simular";
+      } catch (err) {
+        console.error("[simulator]", err);
+      } finally {
+        loading.style.display = "none";
+        btn.disabled = false;
+      }
+    }, 30);
   });
 }
 
