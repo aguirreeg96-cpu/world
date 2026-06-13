@@ -1,0 +1,13 @@
+# Variables de entorno locales — NUNCA subir al repositorio
+.env
+.env.local
+.env.*.local
+
+# Netlify CLI
+.netlify/
+
+# Editores
+.vscode/
+.idea/
+*.swp
+*.swo

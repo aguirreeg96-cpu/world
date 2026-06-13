@@ -4,15 +4,16 @@
  * Orden de inicialización:
  *   1. Calibración de pesos (grid search sobre datos históricos)
  *   2. Mostrar métricas del modelo en el banner
- *   3. Poblar dropdowns
- *   4. Conectar eventos UI
+ *   3. Cargar equipos desde el provider (async — soporta mock y API real)
+ *   4. Poblar dropdowns
+ *   5. Conectar eventos UI
  */
 
-import { getTeams, getTeamById }           from "./data/provider.js";
-import { analyzeMatch, DEFAULT_WEIGHTS }   from "./models/aggregator.js";
-import { analyzeOdds }                     from "./models/odds.js";
-import { calibrateWeights, runBacktest }   from "./models/calibrator.js";
-import { strengthLabel }                   from "./models/elo.js";
+import { getTeams }                            from "./data/provider.js";
+import { analyzeMatch, DEFAULT_WEIGHTS }       from "./models/aggregator.js";
+import { analyzeOdds }                         from "./models/odds.js";
+import { calibrateWeights, runBacktest }       from "./models/calibrator.js";
+import { strengthLabel }                       from "./models/elo.js";
 import {
   renderTeamPreview,
   renderResults,
@@ -30,9 +31,12 @@ let _lastResult = null;
 let _lastTeamA  = null;
 let _lastTeamB  = null;
 
+// Caché local de equipos para lookups síncronos en event handlers
+let _teamsCache = new Map();
+
 // ── Bootstrap ────────────────────────────────────────────────────────────────
 
-(function init() {
+(async function init() {
   // 1. Calibración (síncrona — corre sobre datos en memoria, rápido)
   const calibration       = calibrateWeights();
   const bestWeights       = calibration[0].weights;
@@ -45,14 +49,19 @@ let _lastTeamB  = null;
   // Mostrar métricas en el banner
   renderModelMetrics({ bestWeights, calibratedMetrics, defaultMetrics });
 
-  // 2. UI
-  const teams      = getTeams();
+  // 2. Cargar equipos (async — mock resuelve inmediatamente; API puede tardar)
+  const teams = await getTeams();
+
+  // Caché para lookups O(1) en event handlers sin re-llamar al provider
+  _teamsCache = new Map(teams.map(t => [t.id, t]));
+
+  // 3. UI
   const selectA    = document.getElementById("teamA");
   const selectB    = document.getElementById("teamB");
   const btnAnalyze = document.getElementById("btnAnalyze");
 
   populateSelects(teams, selectA, selectB);
-  setupListeners(teams, selectA, selectB, btnAnalyze, bestWeights);
+  setupListeners(selectA, selectB, btnAnalyze, bestWeights);
   setupMethodologyToggle();
   setupOddsListeners();
 })();
@@ -69,22 +78,22 @@ function populateSelects(teams, selectA, selectB) {
 
 // ── Event Listeners ───────────────────────────────────────────────────────────
 
-function setupListeners(teams, selectA, selectB, btn, weights) {
+function setupListeners(selectA, selectB, btn, weights) {
   selectA.addEventListener("change", () => {
-    renderTeamPreview(getTeamById(selectA.value), "previewA");
+    renderTeamPreview(_teamsCache.get(selectA.value) ?? null, "previewA");
     updateButton(selectA, selectB, btn);
     preventSameTeam(selectA, selectB);
   });
 
   selectB.addEventListener("change", () => {
-    renderTeamPreview(getTeamById(selectB.value), "previewB");
+    renderTeamPreview(_teamsCache.get(selectB.value) ?? null, "previewB");
     updateButton(selectA, selectB, btn);
     preventSameTeam(selectA, selectB);
   });
 
   btn.addEventListener("click", () => {
-    const teamA = getTeamById(selectA.value);
-    const teamB = getTeamById(selectB.value);
+    const teamA = _teamsCache.get(selectA.value) ?? null;
+    const teamB = _teamsCache.get(selectB.value) ?? null;
     if (!teamA || !teamB || teamA.id === teamB.id) return;
 
     btn.textContent = "Calculando…";

@@ -1,170 +1,161 @@
 /**
- * API Adapter — stub para datos reales desde un backend proxy
+ * API Adapter — consume el proxy serverless en /.netlify/functions/football-data
  *
  * ════════════════════════════════════════════════════════════════════════════
- * ⚠  POR QUÉ NO HAY CLAVES API AQUÍ — LEER ANTES DE MODIFICAR
+ * ⚠  SEGURIDAD — LEER ANTES DE MODIFICAR
  * ════════════════════════════════════════════════════════════════════════════
  *
- * Las claves de API nunca deben aparecer en código frontend porque:
+ * La clave de la API NUNCA debe aparecer en código frontend. Este adaptador
+ * llama únicamente al proxy serverless propio (mismo dominio). El proxy es
+ * quien guarda y usa la clave en una variable de entorno del servidor.
  *
- *   1. Cualquier usuario puede ver el código fuente con DevTools → Network
- *      o simplemente haciendo "Ver código fuente".
- *   2. Los bundlers no ofuscan strings suficientemente para proteger claves.
- *   3. Si el key termina en un repositorio público (GitHub, etc.), bots de
- *      scraping lo detectan en minutos y agotan tu quota.
+ *   [Browser]  → fetch("/.netlify/functions/football-data?resource=teams")
+ *   [Netlify Function]  → fetch("https://api.football-data.org/v4/...",
+ *                               { "X-Auth-Token": process.env.FOOTBALL_DATA_API_KEY })
+ *   [football-data.org]
  *
- * ── Arquitectura recomendada ─────────────────────────────────────────────────
+ * ── Fallback automático ───────────────────────────────────────────────────────
  *
- *   [Browser]  → fetch("/api/teams")       → sin key, mismo dominio
- *   [Backend]  → fetch("https://api.football-data.org/v4/teams",
- *                       { "X-Auth-Token": process.env.FD_API_KEY })
- *   [API externa]
+ * Si el proxy devuelve { fallback: true } (clave no configurada) o si la
+ * petición falla por cualquier motivo de red, este adaptador cae
+ * silenciosamente al mockAdapter. La app sigue funcionando en demo mode.
  *
- * El backend lee la key desde una variable de entorno (nunca del código).
- * Opciones de backend sin servidor:
+ * ── Endpoints del proxy ───────────────────────────────────────────────────────
  *
- *   • Vercel Edge Functions — /api/teams.js, FD_API_KEY en el dashboard de Vercel
- *   • Netlify Functions    — /.netlify/functions/teams, variable en Netlify UI
- *   • Cloudflare Workers   — wrangler secret put FD_API_KEY
- *   • Express propio       — require('dotenv').config() + process.env.FD_API_KEY
+ *   GET /.netlify/functions/football-data?resource=teams
+ *       → { teams: [...], globalAvgGoals: number }
  *
- * ── APIs de fútbol disponibles ───────────────────────────────────────────────
+ *   GET /.netlify/functions/football-data?resource=matches
+ *       → { matches: [{ home, away, goalsHome, goalsAway }] }
  *
- *   football-data.org (recomendada)
- *     Plan gratuito: 10 req/min, acceso a selecciones nacionales e histórico.
- *     Doc: https://www.football-data.org/documentation/quickstart
- *
- *   api-football (RapidAPI)
- *     Plan freemium, mayor cobertura de ligas.
- *     Doc: https://www.api-football.com/documentation-v3
- *
- *   clubelo.com / eloratings.net
- *     Ratings ELO públicos y gratuitos sin autenticación (solo lectura).
- *     Pueden complementar datos de goles de otra fuente.
- *
- * ── Normalización ────────────────────────────────────────────────────────────
- *
- * Cada API devuelve estructuras distintas. Este adaptador transforma la
- * respuesta al shape interno que consume el pipeline matemático:
- *
- *   {
- *     id:              string,   // ISO 3166-1 alpha-3 ("ARG", "BRA"...)
- *     name:            string,
- *     flag:            string,   // emoji unicode
- *     confederation:   string,   // "UEFA" | "CONMEBOL" | "CAF" | ...
- *     elo:             number,
- *     avgGoalsFor:     number,
- *     avgGoalsAgainst: number,
- *     recentResults:   string[], // ["W", "D", "L"] más reciente primero
- *   }
+ *   GET /.netlify/functions/football-data?resource=team&id=ARG
+ *       → { id, name, flag, confederation, elo, avgGoalsFor, avgGoalsAgainst, recentResults }
  */
 
-// URL base de TU backend proxy — no apuntar nunca a la API externa directamente
-const PROXY_BASE = "/api"; // ajustar al path real del backend (ej: "https://tu-app.vercel.app/api")
+import * as mockAdapter from "./mockAdapter.js";
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+const PROXY_BASE = "/.netlify/functions/football-data";
 
-async function fetchJSON(path) {
-  const res = await fetch(`${PROXY_BASE}${path}`);
+// ── HTTP helper ───────────────────────────────────────────────────────────────
+
+async function fetchProxy(resource, params = {}) {
+  const qs = new URLSearchParams({ resource, ...params }).toString();
+  const res = await fetch(`${PROXY_BASE}?${qs}`);
   if (!res.ok) {
-    throw new Error(`[apiAdapter] HTTP ${res.status} en ${PROXY_BASE}${path}`);
+    throw new Error(`[apiAdapter] HTTP ${res.status} para resource=${resource}`);
   }
-  return res.json();
+  const data = await res.json();
+  if (data.fallback) {
+    throw new Error(`[apiAdapter] fallback=true: ${data.reason ?? "sin clave API"}`);
+  }
+  return data;
 }
 
-/**
- * Normaliza un equipo de football-data.org al shape interno.
- * Adaptar según la estructura real de la API que elijas.
- */
-function normalizeTeam(raw) {
-  return {
-    id:              raw.tla   ?? raw.id,             // "ARG" (three-letter abbreviation)
-    name:            raw.name,
-    flag:            raw.flag  ?? "🏳",               // football-data.org no siempre incluye emoji
-    confederation:   raw.area?.name ?? "?",
-    elo:             raw.elo   ?? 1700,                // calcular desde histórico si la API no lo da
-    avgGoalsFor:     raw.stats?.avgGoalsFor     ?? 1.5,
-    avgGoalsAgainst: raw.stats?.avgGoalsAgainst ?? 1.1,
-    recentResults:   raw.recentResults          ?? [],
-  };
+// ── Cache de sesión ───────────────────────────────────────────────────────────
+// Se rellena en la primera llamada a getTeams() para evitar llamadas duplicadas.
+
+let _teamsCache = null;      // { teams: [...], globalAvgGoals: number } | null
+let _matchesCache = null;    // { matches: [...] } | null
+
+async function ensureTeams() {
+  if (_teamsCache) return _teamsCache;
+  _teamsCache = await fetchProxy("teams");
+  return _teamsCache;
 }
 
-/**
- * Normaliza un partido de la API al formato interno.
- * Resultado de football-data.org: { homeTeam: { tla }, awayTeam: { tla }, score: { fullTime: { home, away } } }
- */
-function normalizeMatch(raw) {
-  return {
-    home:      raw.homeTeam?.tla ?? raw.home,
-    away:      raw.awayTeam?.tla ?? raw.away,
-    goalsHome: raw.score?.fullTime?.home ?? raw.goalsHome ?? 0,
-    goalsAway: raw.score?.fullTime?.away ?? raw.goalsAway ?? 0,
-  };
+async function ensureMatches() {
+  if (_matchesCache) return _matchesCache;
+  _matchesCache = await fetchProxy("matches");
+  return _matchesCache;
 }
 
 // ── Funciones públicas ────────────────────────────────────────────────────────
 
 /**
  * Todos los equipos disponibles, ordenados por ELO descendente.
- * Requiere endpoint: GET /api/teams → { teams: [...] }
+ * Con fallback automático al mockAdapter si el proxy no está disponible.
  */
 export async function getTeams() {
-  const data = await fetchJSON("/teams");
-  return data.teams.map(normalizeTeam).sort((a, b) => b.elo - a.elo);
+  try {
+    const { teams } = await ensureTeams();
+    return teams;
+  } catch (err) {
+    console.warn("[apiAdapter] getTeams fallback →", err.message);
+    return mockAdapter.getTeams();
+  }
 }
 
 /**
- * Un equipo por su ID.
- * Requiere endpoint: GET /api/teams/:id → { ...teamData }
+ * Un equipo por su ID ISO (ej: "ARG").
+ * Primero busca en la caché de equipos; si no está, cae al mock.
  */
 export async function getTeamById(id) {
-  const data = await fetchJSON(`/teams/${encodeURIComponent(id)}`);
-  return normalizeTeam(data);
+  try {
+    const { teams } = await ensureTeams();
+    return teams.find(t => t.id === id) ?? null;
+  } catch (err) {
+    console.warn("[apiAdapter] getTeamById fallback →", err.message);
+    return mockAdapter.getTeamById(id);
+  }
 }
 
 /**
- * Estadísticas modelables de un equipo.
- * Requiere endpoint: GET /api/teams/:id/stats → { elo, avgGoalsFor, ... }
+ * Estadísticas modelables de un equipo (sin metadata de display).
  */
 export async function getTeamStats(teamId) {
-  const data = await fetchJSON(`/teams/${encodeURIComponent(teamId)}/stats`);
-  return {
-    id:              teamId,
-    elo:             data.elo,
-    avgGoalsFor:     data.avgGoalsFor,
-    avgGoalsAgainst: data.avgGoalsAgainst,
-    recentResults:   data.recentResults ?? [],
-    confederation:   data.confederation ?? "?",
-  };
+  try {
+    const { teams } = await ensureTeams();
+    const t = teams.find(t => t.id === teamId);
+    if (!t) return null;
+    return {
+      id:              t.id,
+      elo:             t.elo,
+      avgGoalsFor:     t.avgGoalsFor,
+      avgGoalsAgainst: t.avgGoalsAgainst,
+      recentResults:   t.recentResults,
+      confederation:   t.confederation,
+    };
+  } catch (err) {
+    console.warn("[apiAdapter] getTeamStats fallback →", err.message);
+    return mockAdapter.getTeamStats(teamId);
+  }
 }
 
 /**
- * Últimos partidos de un equipo.
- * Requiere endpoint: GET /api/teams/:id/matches?limit=8 → { matches: [...] }
+ * Partidos del torneo donde participó el equipo.
  */
 export async function getRecentMatches(teamId) {
-  const data = await fetchJSON(`/teams/${encodeURIComponent(teamId)}/matches?limit=8`);
-  return data.matches.map(normalizeMatch);
+  try {
+    const { matches } = await ensureMatches();
+    return matches.filter(m => m.home === teamId || m.away === teamId);
+  } catch (err) {
+    console.warn("[apiAdapter] getRecentMatches fallback →", err.message);
+    return mockAdapter.getRecentMatches(teamId);
+  }
 }
 
 /**
- * Dataset histórico para backtesting.
- * Requiere endpoint: GET /api/matches/historical → { matches: [...] }
- *
- * NOTA: Para que el calibrator.js use datos reales, habría que pasarle
- * este dataset explícitamente o crear un calibrator async. Ver documentación
- * en calibrator.js.
+ * Dataset histórico completo para backtesting.
  */
 export async function getHistoricalMatches() {
-  const data = await fetchJSON("/matches/historical");
-  return data.matches.map(normalizeMatch);
+  try {
+    const { matches } = await ensureMatches();
+    return matches;
+  } catch (err) {
+    console.warn("[apiAdapter] getHistoricalMatches fallback →", err.message);
+    return mockAdapter.getHistoricalMatches();
+  }
 }
 
 /**
- * Promedio global de goles para normalizar λ en el modelo Poisson.
- * Requiere endpoint: GET /api/stats/global → { avgGoalsPerMatch: number }
+ * Promedio global de goles (μ en el modelo Poisson).
  */
 export async function getGlobalAvgGoals() {
-  const data = await fetchJSON("/stats/global");
-  return data.avgGoalsPerMatch ?? 1.35;
+  try {
+    const { globalAvgGoals } = await ensureTeams();
+    return globalAvgGoals ?? 1.35;
+  } catch (err) {
+    console.warn("[apiAdapter] getGlobalAvgGoals fallback →", err.message);
+    return mockAdapter.getGlobalAvgGoals();
+  }
 }

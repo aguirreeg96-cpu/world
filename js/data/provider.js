@@ -1,81 +1,67 @@
 /**
  * Data Provider — punto de acceso único a los datos de la aplicación
  *
- * ── Uso normal (el resto de la app solo importa desde aquí) ──────────────────
- *
- *   import { getTeams, getTeamById } from "../data/provider.js";
- *   const teams = getTeams();
- *
  * ── Cambiar de mock a API real ───────────────────────────────────────────────
  *
- *   1. Implementar el backend proxy con la API key en variables de entorno.
- *      (ver apiAdapter.js para la arquitectura recomendada)
- *   2. Cambiar DATA_SOURCE a "api" en este archivo.
- *   3. Descomentar el import de apiAdapter.
- *   4. Las funciones del apiAdapter son async → main.js necesitará await.
- *      Convertir la función init() en async function init() y usar await al
- *      llamar getTeams() y getTeamById().
+ *   Cambiar DATA_SOURCE a "api" en este archivo.
+ *   Las funciones de apiAdapter son async y tienen fallback automático al mock.
  *
  * ── Nota sobre calibrator.js ─────────────────────────────────────────────────
  *
  *   calibrator.js importa directamente desde teams.js y matches_mock.js.
- *   Esto es intencional: es una herramienta de backtesting que usa un
- *   dataset de entrenamiento fijo. Para calibrar con datos reales, crear
- *   un nuevo archivo de matches y actualizar el import en calibrator.js.
+ *   Esto es intencional: es una herramienta de backtesting con dataset fijo.
  *   No enrutar el calibrator a través del provider.
  */
 
 import * as mockAdapter from "./adapters/mockAdapter.js";
-
-// Descomentar cuando el backend esté listo:
-// import * as apiAdapter from "./adapters/apiAdapter.js";
+import * as apiAdapter  from "./adapters/apiAdapter.js";
 
 // ── Configuración ─────────────────────────────────────────────────────────────
 
-/** Fuente de datos activa. Cambiar a "api" para usar el backend proxy. */
+/** Cambiar a "api" para usar el backend proxy con fallback automático al mock. */
 export const DATA_SOURCE = "mock";
 
-// Selección del adaptador — cambiar la línea de abajo al activar la API:
-const adapter = mockAdapter;
-// const adapter = DATA_SOURCE === "api" ? apiAdapter : mockAdapter;
+const adapter = DATA_SOURCE === "api" ? apiAdapter : mockAdapter;
 
-// ── Interfaz pública ──────────────────────────────────────────────────────────
+// ── Interfaz pública — todas las funciones devuelven Promises ─────────────────
+// Promise.resolve() envuelve los valores síncronos del mockAdapter para que
+// el resto de la app use await de forma uniforme independientemente del adapter.
 
 /**
  * Todos los equipos disponibles, ordenados por ELO descendente.
- * @returns {Array<TeamRecord>}
+ * @returns {Promise<Array<TeamRecord>>}
  */
-export const getTeams = () => adapter.getTeams();
+export const getTeams = () => Promise.resolve(adapter.getTeams());
 
 /**
  * Un equipo por su ID ISO (ej: "ARG", "BRA", "FRA").
  * @param {string} id
- * @returns {TeamRecord | null}
+ * @returns {Promise<TeamRecord | null>}
  */
-export const getTeamById = (id) => adapter.getTeamById(id);
+export const getTeamById = (id) => Promise.resolve(adapter.getTeamById(id));
 
 /**
  * Estadísticas modelables de un equipo (sin metadata de display).
  * @param {string} teamId
- * @returns {{ id, elo, avgGoalsFor, avgGoalsAgainst, recentResults, confederation } | null}
+ * @returns {Promise<{ id, elo, avgGoalsFor, avgGoalsAgainst, recentResults, confederation } | null>}
  */
-export const getTeamStats = (teamId) => adapter.getTeamStats(teamId);
+export const getTeamStats = (teamId) => Promise.resolve(adapter.getTeamStats(teamId));
 
 /**
  * Partidos recientes de un equipo (home o away).
  * @param {string} teamId
- * @returns {Array<MatchRecord>}
+ * @returns {Promise<Array<MatchRecord>>}
  */
-export const getRecentMatches = (teamId) => adapter.getRecentMatches(teamId);
+export const getRecentMatches = (teamId) => Promise.resolve(adapter.getRecentMatches(teamId));
 
 /**
  * Dataset histórico completo para backtesting y calibración.
- * @returns {Array<MatchRecord>}
+ * @returns {Promise<Array<MatchRecord>>}
  */
-export const getHistoricalMatches = () => adapter.getHistoricalMatches();
+export const getHistoricalMatches = () => Promise.resolve(adapter.getHistoricalMatches());
 
 /**
  * Promedio global de goles (μ en el modelo Poisson).
- * @returns {number}
+ * @returns {Promise<number>}
  */
-export const getGlobalAvgGoals = () => adapter.getGlobalAvgGoals();
+export const getGlobalAvgGoals = () => Promise.resolve(adapter.getGlobalAvgGoals());

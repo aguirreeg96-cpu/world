@@ -6,6 +6,10 @@
   # Sin comando de build — Vanilla JS ES Modules sin bundler.
   # Netlify sirve el directorio raíz tal cual.
 
+[functions]
+  directory = "netlify/functions"
+  # Node.js 18+ necesario para fetch nativo (sin dependencias npm)
+
 # ── Headers de seguridad ──────────────────────────────────────────────────────
 
 [[headers]]
