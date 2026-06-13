@@ -10,9 +10,9 @@
  * quien guarda y usa la clave en una variable de entorno del servidor.
  *
  *   [Browser]  → fetch("/.netlify/functions/football-data?resource=teams")
- *   [Netlify Function]  → fetch("https://v3.football.api-sports.io/fixtures?...",
- *                               { "x-rapidapi-key": process.env.API_FOOTBALL_KEY })
- *   [api-football.com (RapidAPI)]
+ *   [Netlify Function]  → fetch("https://www.thesportsdb.com/api/v1/json/{key}/...",
+ *                               con clave desde process.env.THESPORTSDB_API_KEY)
+ *   [TheSportsDB API v1]
  *
  * ── Fallback automático ───────────────────────────────────────────────────────
  *
