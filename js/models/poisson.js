@@ -27,7 +27,7 @@
  */
 
 export const MAX_GOALS = 8;   // truncación: cubre >99.9% de resultados reales
-export const RHO       = -0.13; // correlación DC empírica
+export const RHO       = -0.13; // correlación DC empírica (calibrada en datos históricos)
 
 // ── Matemática interna ───────────────────────────────────────────────────────
 
@@ -42,7 +42,23 @@ function poissonPMF(lambda, k) {
   return Math.exp(logP);
 }
 
-function dixonColesTau(i, j, lambdaA, lambdaB, rho = RHO) {
+/**
+ * Factor de corrección Dixon-Coles para marcadores bajos.
+ *
+ * Con ρ < 0 (típicamente −0.13):
+ *   τ(0,0) = 1 − λ_A·λ_B·ρ  > 1  → sube P(0-0) y P(1-1)
+ *   τ(1,0) = 1 + λ_B·ρ       < 1  → baja P(1-0) y P(0-1)
+ *   τ(1,1) = 1 − ρ           > 1
+ *   τ(i,j) = 1  si i+j ≥ 2        → Poisson sin modificar
+ *
+ * Exportada para inspección y tests desde consola.
+ *
+ * @param {number} i golesA, @param {number} j golesB
+ * @param {number} lambdaA, @param {number} lambdaB
+ * @param {number} [rho]
+ * @returns {number} factor multiplicativo ≥ 0
+ */
+export function dixonColesTau(i, j, lambdaA, lambdaB, rho = RHO) {
   if (i === 0 && j === 0) return 1 - lambdaA * lambdaB * rho;
   if (i === 1 && j === 0) return 1 + lambdaB * rho;
   if (i === 0 && j === 1) return 1 + lambdaA * rho;
@@ -77,21 +93,39 @@ export function expectedGoals(teamA, teamB, globalAvg) {
 /**
  * Matriz con corrección Dixon-Coles (producción).
  * P[i][j] = probabilidad del marcador i-j, renormalizada.
+ *
+ * @param {number} lambdaA  goles esperados del equipo A
+ * @param {number} lambdaB  goles esperados del equipo B
+ * @param {number} [rho]    parámetro de correlación DC (default RHO = −0.13)
+ * @returns {number[][]}    matriz (MAX_GOALS+1)² con Σ P[i][j] = 1
  */
-export function scoreMatrix(lambdaA, lambdaB) {
+export function scoreMatrix(lambdaA, lambdaB, rho = RHO) {
   const matrix = [];
   let total = 0;
+
   for (let i = 0; i <= MAX_GOALS; i++) {
     matrix[i] = [];
     for (let j = 0; j <= MAX_GOALS; j++) {
       const raw = poissonPMF(lambdaA, i) * poissonPMF(lambdaB, j);
-      matrix[i][j] = Math.max(0, raw * dixonColesTau(i, j, lambdaA, lambdaB));
+      // Math.max garantiza que τ negativo (rho muy positivo) no genere P < 0
+      matrix[i][j] = Math.max(0, raw * dixonColesTau(i, j, lambdaA, lambdaB, rho));
       total += matrix[i][j];
     }
   }
+
+  // Renormalización: necesaria porque τ redistribuye masa entre celdas bajas
   for (let i = 0; i <= MAX_GOALS; i++)
     for (let j = 0; j <= MAX_GOALS; j++)
       matrix[i][j] /= total;
+
+  // Validación: la renormalización no debe dejar error mayor a 1e-6
+  let check = 0;
+  for (let i = 0; i <= MAX_GOALS; i++)
+    for (let j = 0; j <= MAX_GOALS; j++)
+      check += matrix[i][j];
+  if (Math.abs(check - 1.0) > 1e-6)
+    console.warn(`[poisson] scoreMatrix: Σ = ${check.toFixed(8)} (esperado 1.0)`);
+
   return matrix;
 }
 
@@ -131,6 +165,11 @@ export function matchProbabilities(matrix) {
     }
   }
   const t = pA + pDraw + pB;
+
+  // Validación: la suma de celdas de la matriz debe ser ≈ 1 antes de dividir
+  if (Math.abs(t - 1.0) > 1e-4)
+    console.warn(`[poisson] matchProbabilities: Σ celdas = ${t.toFixed(6)} (esperado ≈1.0)`);
+
   return { pA: pA / t, pDraw: pDraw / t, pB: pB / t };
 }
 
