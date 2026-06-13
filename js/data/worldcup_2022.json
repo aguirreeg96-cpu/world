@@ -1,0 +1,917 @@
+{
+  "tournament": "FIFA World Cup 2022",
+  "season": 2022,
+  "globalAvgGoals": 1.312,
+  "totalMatches": 64,
+  "totalGoals": 168,
+  "matches": [
+    {
+      "home": "QAT",
+      "away": "ECU",
+      "goalsHome": 0,
+      "goalsAway": 2,
+      "date": "2022-11-20",
+      "stage": "group",
+      "group": "Group A"
+    },
+    {
+      "home": "SEN",
+      "away": "NED",
+      "goalsHome": 0,
+      "goalsAway": 2,
+      "date": "2022-11-21",
+      "stage": "group",
+      "group": "Group A"
+    },
+    {
+      "home": "QAT",
+      "away": "SEN",
+      "goalsHome": 1,
+      "goalsAway": 3,
+      "date": "2022-11-25",
+      "stage": "group",
+      "group": "Group A"
+    },
+    {
+      "home": "NED",
+      "away": "ECU",
+      "goalsHome": 1,
+      "goalsAway": 1,
+      "date": "2022-11-25",
+      "stage": "group",
+      "group": "Group A"
+    },
+    {
+      "home": "ECU",
+      "away": "SEN",
+      "goalsHome": 1,
+      "goalsAway": 2,
+      "date": "2022-11-29",
+      "stage": "group",
+      "group": "Group A"
+    },
+    {
+      "home": "NED",
+      "away": "QAT",
+      "goalsHome": 2,
+      "goalsAway": 0,
+      "date": "2022-11-29",
+      "stage": "group",
+      "group": "Group A"
+    },
+    {
+      "home": "ENG",
+      "away": "IRN",
+      "goalsHome": 6,
+      "goalsAway": 2,
+      "date": "2022-11-21",
+      "stage": "group",
+      "group": "Group B"
+    },
+    {
+      "home": "USA",
+      "away": "WAL",
+      "goalsHome": 1,
+      "goalsAway": 1,
+      "date": "2022-11-21",
+      "stage": "group",
+      "group": "Group B"
+    },
+    {
+      "home": "WAL",
+      "away": "IRN",
+      "goalsHome": 0,
+      "goalsAway": 2,
+      "date": "2022-11-25",
+      "stage": "group",
+      "group": "Group B"
+    },
+    {
+      "home": "ENG",
+      "away": "USA",
+      "goalsHome": 0,
+      "goalsAway": 0,
+      "date": "2022-11-25",
+      "stage": "group",
+      "group": "Group B"
+    },
+    {
+      "home": "WAL",
+      "away": "ENG",
+      "goalsHome": 0,
+      "goalsAway": 3,
+      "date": "2022-11-29",
+      "stage": "group",
+      "group": "Group B"
+    },
+    {
+      "home": "IRN",
+      "away": "USA",
+      "goalsHome": 0,
+      "goalsAway": 1,
+      "date": "2022-11-29",
+      "stage": "group",
+      "group": "Group B"
+    },
+    {
+      "home": "ARG",
+      "away": "KSA",
+      "goalsHome": 1,
+      "goalsAway": 2,
+      "date": "2022-11-22",
+      "stage": "group",
+      "group": "Group C"
+    },
+    {
+      "home": "MEX",
+      "away": "POL",
+      "goalsHome": 0,
+      "goalsAway": 0,
+      "date": "2022-11-22",
+      "stage": "group",
+      "group": "Group C"
+    },
+    {
+      "home": "POL",
+      "away": "KSA",
+      "goalsHome": 2,
+      "goalsAway": 0,
+      "date": "2022-11-26",
+      "stage": "group",
+      "group": "Group C"
+    },
+    {
+      "home": "ARG",
+      "away": "MEX",
+      "goalsHome": 2,
+      "goalsAway": 0,
+      "date": "2022-11-26",
+      "stage": "group",
+      "group": "Group C"
+    },
+    {
+      "home": "POL",
+      "away": "ARG",
+      "goalsHome": 0,
+      "goalsAway": 2,
+      "date": "2022-11-30",
+      "stage": "group",
+      "group": "Group C"
+    },
+    {
+      "home": "KSA",
+      "away": "MEX",
+      "goalsHome": 1,
+      "goalsAway": 2,
+      "date": "2022-11-30",
+      "stage": "group",
+      "group": "Group C"
+    },
+    {
+      "home": "DEN",
+      "away": "TUN",
+      "goalsHome": 0,
+      "goalsAway": 0,
+      "date": "2022-11-22",
+      "stage": "group",
+      "group": "Group D"
+    },
+    {
+      "home": "FRA",
+      "away": "AUS",
+      "goalsHome": 4,
+      "goalsAway": 1,
+      "date": "2022-11-22",
+      "stage": "group",
+      "group": "Group D"
+    },
+    {
+      "home": "TUN",
+      "away": "AUS",
+      "goalsHome": 0,
+      "goalsAway": 1,
+      "date": "2022-11-26",
+      "stage": "group",
+      "group": "Group D"
+    },
+    {
+      "home": "FRA",
+      "away": "DEN",
+      "goalsHome": 2,
+      "goalsAway": 1,
+      "date": "2022-11-26",
+      "stage": "group",
+      "group": "Group D"
+    },
+    {
+      "home": "AUS",
+      "away": "DEN",
+      "goalsHome": 1,
+      "goalsAway": 0,
+      "date": "2022-11-30",
+      "stage": "group",
+      "group": "Group D"
+    },
+    {
+      "home": "TUN",
+      "away": "FRA",
+      "goalsHome": 1,
+      "goalsAway": 0,
+      "date": "2022-11-30",
+      "stage": "group",
+      "group": "Group D"
+    },
+    {
+      "home": "GER",
+      "away": "JPN",
+      "goalsHome": 1,
+      "goalsAway": 2,
+      "date": "2022-11-23",
+      "stage": "group",
+      "group": "Group E"
+    },
+    {
+      "home": "ESP",
+      "away": "CRC",
+      "goalsHome": 7,
+      "goalsAway": 0,
+      "date": "2022-11-23",
+      "stage": "group",
+      "group": "Group E"
+    },
+    {
+      "home": "JPN",
+      "away": "CRC",
+      "goalsHome": 0,
+      "goalsAway": 1,
+      "date": "2022-11-27",
+      "stage": "group",
+      "group": "Group E"
+    },
+    {
+      "home": "ESP",
+      "away": "GER",
+      "goalsHome": 1,
+      "goalsAway": 1,
+      "date": "2022-11-27",
+      "stage": "group",
+      "group": "Group E"
+    },
+    {
+      "home": "JPN",
+      "away": "ESP",
+      "goalsHome": 2,
+      "goalsAway": 1,
+      "date": "2022-12-01",
+      "stage": "group",
+      "group": "Group E"
+    },
+    {
+      "home": "CRC",
+      "away": "GER",
+      "goalsHome": 2,
+      "goalsAway": 4,
+      "date": "2022-12-01",
+      "stage": "group",
+      "group": "Group E"
+    },
+    {
+      "home": "MAR",
+      "away": "CRO",
+      "goalsHome": 0,
+      "goalsAway": 0,
+      "date": "2022-11-23",
+      "stage": "group",
+      "group": "Group F"
+    },
+    {
+      "home": "BEL",
+      "away": "CAN",
+      "goalsHome": 1,
+      "goalsAway": 0,
+      "date": "2022-11-23",
+      "stage": "group",
+      "group": "Group F"
+    },
+    {
+      "home": "BEL",
+      "away": "MAR",
+      "goalsHome": 0,
+      "goalsAway": 2,
+      "date": "2022-11-27",
+      "stage": "group",
+      "group": "Group F"
+    },
+    {
+      "home": "CRO",
+      "away": "CAN",
+      "goalsHome": 4,
+      "goalsAway": 1,
+      "date": "2022-11-27",
+      "stage": "group",
+      "group": "Group F"
+    },
+    {
+      "home": "CRO",
+      "away": "BEL",
+      "goalsHome": 0,
+      "goalsAway": 0,
+      "date": "2022-12-01",
+      "stage": "group",
+      "group": "Group F"
+    },
+    {
+      "home": "CAN",
+      "away": "MAR",
+      "goalsHome": 1,
+      "goalsAway": 2,
+      "date": "2022-12-01",
+      "stage": "group",
+      "group": "Group F"
+    },
+    {
+      "home": "SUI",
+      "away": "CMR",
+      "goalsHome": 1,
+      "goalsAway": 0,
+      "date": "2022-11-24",
+      "stage": "group",
+      "group": "Group G"
+    },
+    {
+      "home": "BRA",
+      "away": "SRB",
+      "goalsHome": 2,
+      "goalsAway": 0,
+      "date": "2022-11-24",
+      "stage": "group",
+      "group": "Group G"
+    },
+    {
+      "home": "CMR",
+      "away": "SRB",
+      "goalsHome": 3,
+      "goalsAway": 3,
+      "date": "2022-11-28",
+      "stage": "group",
+      "group": "Group G"
+    },
+    {
+      "home": "BRA",
+      "away": "SUI",
+      "goalsHome": 1,
+      "goalsAway": 0,
+      "date": "2022-11-28",
+      "stage": "group",
+      "group": "Group G"
+    },
+    {
+      "home": "SRB",
+      "away": "SUI",
+      "goalsHome": 2,
+      "goalsAway": 3,
+      "date": "2022-12-02",
+      "stage": "group",
+      "group": "Group G"
+    },
+    {
+      "home": "CMR",
+      "away": "BRA",
+      "goalsHome": 1,
+      "goalsAway": 0,
+      "date": "2022-12-02",
+      "stage": "group",
+      "group": "Group G"
+    },
+    {
+      "home": "URU",
+      "away": "KOR",
+      "goalsHome": 0,
+      "goalsAway": 0,
+      "date": "2022-11-24",
+      "stage": "group",
+      "group": "Group H"
+    },
+    {
+      "home": "POR",
+      "away": "GHA",
+      "goalsHome": 3,
+      "goalsAway": 2,
+      "date": "2022-11-24",
+      "stage": "group",
+      "group": "Group H"
+    },
+    {
+      "home": "KOR",
+      "away": "GHA",
+      "goalsHome": 2,
+      "goalsAway": 3,
+      "date": "2022-11-28",
+      "stage": "group",
+      "group": "Group H"
+    },
+    {
+      "home": "POR",
+      "away": "URU",
+      "goalsHome": 2,
+      "goalsAway": 0,
+      "date": "2022-11-28",
+      "stage": "group",
+      "group": "Group H"
+    },
+    {
+      "home": "GHA",
+      "away": "URU",
+      "goalsHome": 0,
+      "goalsAway": 2,
+      "date": "2022-12-02",
+      "stage": "group",
+      "group": "Group H"
+    },
+    {
+      "home": "KOR",
+      "away": "POR",
+      "goalsHome": 2,
+      "goalsAway": 1,
+      "date": "2022-12-02",
+      "stage": "group",
+      "group": "Group H"
+    },
+    {
+      "home": "NED",
+      "away": "USA",
+      "goalsHome": 3,
+      "goalsAway": 1,
+      "date": "2022-12-03",
+      "stage": "r16",
+      "group": null
+    },
+    {
+      "home": "ARG",
+      "away": "AUS",
+      "goalsHome": 2,
+      "goalsAway": 1,
+      "date": "2022-12-03",
+      "stage": "r16",
+      "group": null
+    },
+    {
+      "home": "FRA",
+      "away": "POL",
+      "goalsHome": 3,
+      "goalsAway": 1,
+      "date": "2022-12-04",
+      "stage": "r16",
+      "group": null
+    },
+    {
+      "home": "ENG",
+      "away": "SEN",
+      "goalsHome": 3,
+      "goalsAway": 0,
+      "date": "2022-12-04",
+      "stage": "r16",
+      "group": null
+    },
+    {
+      "home": "JPN",
+      "away": "CRO",
+      "goalsHome": 1,
+      "goalsAway": 1,
+      "date": "2022-12-05",
+      "stage": "r16",
+      "group": null,
+      "penaltyHome": 1,
+      "penaltyAway": 3
+    },
+    {
+      "home": "BRA",
+      "away": "KOR",
+      "goalsHome": 4,
+      "goalsAway": 1,
+      "date": "2022-12-05",
+      "stage": "r16",
+      "group": null
+    },
+    {
+      "home": "MAR",
+      "away": "ESP",
+      "goalsHome": 0,
+      "goalsAway": 0,
+      "date": "2022-12-06",
+      "stage": "r16",
+      "group": null,
+      "penaltyHome": 3,
+      "penaltyAway": 0
+    },
+    {
+      "home": "POR",
+      "away": "SUI",
+      "goalsHome": 6,
+      "goalsAway": 1,
+      "date": "2022-12-06",
+      "stage": "r16",
+      "group": null
+    },
+    {
+      "home": "CRO",
+      "away": "BRA",
+      "goalsHome": 0,
+      "goalsAway": 0,
+      "date": "2022-12-09",
+      "stage": "qf",
+      "group": null,
+      "penaltyHome": 4,
+      "penaltyAway": 2
+    },
+    {
+      "home": "NED",
+      "away": "ARG",
+      "goalsHome": 2,
+      "goalsAway": 2,
+      "date": "2022-12-09",
+      "stage": "qf",
+      "group": null,
+      "penaltyHome": 3,
+      "penaltyAway": 4
+    },
+    {
+      "home": "MAR",
+      "away": "POR",
+      "goalsHome": 1,
+      "goalsAway": 0,
+      "date": "2022-12-10",
+      "stage": "qf",
+      "group": null
+    },
+    {
+      "home": "ENG",
+      "away": "FRA",
+      "goalsHome": 1,
+      "goalsAway": 2,
+      "date": "2022-12-10",
+      "stage": "qf",
+      "group": null
+    },
+    {
+      "home": "ARG",
+      "away": "CRO",
+      "goalsHome": 3,
+      "goalsAway": 0,
+      "date": "2022-12-13",
+      "stage": "sf",
+      "group": null
+    },
+    {
+      "home": "FRA",
+      "away": "MAR",
+      "goalsHome": 2,
+      "goalsAway": 0,
+      "date": "2022-12-14",
+      "stage": "sf",
+      "group": null
+    },
+    {
+      "home": "CRO",
+      "away": "MAR",
+      "goalsHome": 2,
+      "goalsAway": 1,
+      "date": "2022-12-17",
+      "stage": "third",
+      "group": null
+    },
+    {
+      "home": "ARG",
+      "away": "FRA",
+      "goalsHome": 2,
+      "goalsAway": 2,
+      "date": "2022-12-18",
+      "stage": "final",
+      "group": null,
+      "penaltyHome": 4,
+      "penaltyAway": 2
+    }
+  ],
+  "teamStats": {
+    "ARG": {
+      "avgGoalsFor": 2.0,
+      "avgGoalsAgainst": 1.0,
+      "recentResults": [
+        "L",
+        "W",
+        "W",
+        "W",
+        "D",
+        "W",
+        "D"
+      ]
+    },
+    "AUS": {
+      "avgGoalsFor": 1.0,
+      "avgGoalsAgainst": 1.5,
+      "recentResults": [
+        "L",
+        "W",
+        "W",
+        "L"
+      ]
+    },
+    "BEL": {
+      "avgGoalsFor": 0.33,
+      "avgGoalsAgainst": 0.67,
+      "recentResults": [
+        "W",
+        "L",
+        "D"
+      ]
+    },
+    "BRA": {
+      "avgGoalsFor": 1.4,
+      "avgGoalsAgainst": 0.4,
+      "recentResults": [
+        "W",
+        "W",
+        "L",
+        "W",
+        "D"
+      ]
+    },
+    "CAN": {
+      "avgGoalsFor": 0.67,
+      "avgGoalsAgainst": 2.33,
+      "recentResults": [
+        "L",
+        "L",
+        "L"
+      ]
+    },
+    "CMR": {
+      "avgGoalsFor": 1.33,
+      "avgGoalsAgainst": 1.33,
+      "recentResults": [
+        "L",
+        "D",
+        "W"
+      ]
+    },
+    "CRC": {
+      "avgGoalsFor": 1.0,
+      "avgGoalsAgainst": 3.67,
+      "recentResults": [
+        "L",
+        "W",
+        "L"
+      ]
+    },
+    "CRO": {
+      "avgGoalsFor": 1.0,
+      "avgGoalsAgainst": 0.86,
+      "recentResults": [
+        "D",
+        "W",
+        "D",
+        "D",
+        "D",
+        "L",
+        "W"
+      ]
+    },
+    "DEN": {
+      "avgGoalsFor": 0.33,
+      "avgGoalsAgainst": 1.0,
+      "recentResults": [
+        "D",
+        "L",
+        "L"
+      ]
+    },
+    "ECU": {
+      "avgGoalsFor": 1.33,
+      "avgGoalsAgainst": 1.0,
+      "recentResults": [
+        "W",
+        "D",
+        "L"
+      ]
+    },
+    "ENG": {
+      "avgGoalsFor": 2.6,
+      "avgGoalsAgainst": 0.8,
+      "recentResults": [
+        "W",
+        "D",
+        "W",
+        "W",
+        "L"
+      ]
+    },
+    "ESP": {
+      "avgGoalsFor": 2.25,
+      "avgGoalsAgainst": 0.75,
+      "recentResults": [
+        "W",
+        "D",
+        "L",
+        "D"
+      ]
+    },
+    "FRA": {
+      "avgGoalsFor": 2.14,
+      "avgGoalsAgainst": 1.0,
+      "recentResults": [
+        "W",
+        "W",
+        "L",
+        "W",
+        "W",
+        "W",
+        "D"
+      ]
+    },
+    "GER": {
+      "avgGoalsFor": 2.0,
+      "avgGoalsAgainst": 1.67,
+      "recentResults": [
+        "L",
+        "D",
+        "W"
+      ]
+    },
+    "GHA": {
+      "avgGoalsFor": 1.67,
+      "avgGoalsAgainst": 2.33,
+      "recentResults": [
+        "L",
+        "W",
+        "L"
+      ]
+    },
+    "IRN": {
+      "avgGoalsFor": 1.33,
+      "avgGoalsAgainst": 2.33,
+      "recentResults": [
+        "L",
+        "W",
+        "L"
+      ]
+    },
+    "JPN": {
+      "avgGoalsFor": 1.25,
+      "avgGoalsAgainst": 1.0,
+      "recentResults": [
+        "W",
+        "L",
+        "W",
+        "D"
+      ]
+    },
+    "KOR": {
+      "avgGoalsFor": 1.25,
+      "avgGoalsAgainst": 2.0,
+      "recentResults": [
+        "D",
+        "L",
+        "W",
+        "L"
+      ]
+    },
+    "KSA": {
+      "avgGoalsFor": 1.0,
+      "avgGoalsAgainst": 1.67,
+      "recentResults": [
+        "W",
+        "L",
+        "L"
+      ]
+    },
+    "MAR": {
+      "avgGoalsFor": 0.86,
+      "avgGoalsAgainst": 0.71,
+      "recentResults": [
+        "D",
+        "W",
+        "W",
+        "D",
+        "W",
+        "L",
+        "L"
+      ]
+    },
+    "MEX": {
+      "avgGoalsFor": 0.67,
+      "avgGoalsAgainst": 1.0,
+      "recentResults": [
+        "D",
+        "L",
+        "W"
+      ]
+    },
+    "NED": {
+      "avgGoalsFor": 2.0,
+      "avgGoalsAgainst": 0.8,
+      "recentResults": [
+        "W",
+        "D",
+        "W",
+        "W",
+        "D"
+      ]
+    },
+    "POL": {
+      "avgGoalsFor": 0.75,
+      "avgGoalsAgainst": 1.25,
+      "recentResults": [
+        "D",
+        "W",
+        "L",
+        "L"
+      ]
+    },
+    "POR": {
+      "avgGoalsFor": 2.4,
+      "avgGoalsAgainst": 1.2,
+      "recentResults": [
+        "W",
+        "W",
+        "L",
+        "W",
+        "L"
+      ]
+    },
+    "QAT": {
+      "avgGoalsFor": 0.33,
+      "avgGoalsAgainst": 2.33,
+      "recentResults": [
+        "L",
+        "L",
+        "L"
+      ]
+    },
+    "SEN": {
+      "avgGoalsFor": 1.25,
+      "avgGoalsAgainst": 1.75,
+      "recentResults": [
+        "L",
+        "W",
+        "W",
+        "L"
+      ]
+    },
+    "SRB": {
+      "avgGoalsFor": 1.67,
+      "avgGoalsAgainst": 2.67,
+      "recentResults": [
+        "L",
+        "D",
+        "L"
+      ]
+    },
+    "SUI": {
+      "avgGoalsFor": 1.25,
+      "avgGoalsAgainst": 2.25,
+      "recentResults": [
+        "W",
+        "L",
+        "W",
+        "L"
+      ]
+    },
+    "TUN": {
+      "avgGoalsFor": 0.33,
+      "avgGoalsAgainst": 0.33,
+      "recentResults": [
+        "D",
+        "L",
+        "W"
+      ]
+    },
+    "URU": {
+      "avgGoalsFor": 0.67,
+      "avgGoalsAgainst": 0.67,
+      "recentResults": [
+        "D",
+        "L",
+        "W"
+      ]
+    },
+    "USA": {
+      "avgGoalsFor": 0.75,
+      "avgGoalsAgainst": 1.0,
+      "recentResults": [
+        "D",
+        "D",
+        "W",
+        "L"
+      ]
+    },
+    "WAL": {
+      "avgGoalsFor": 0.33,
+      "avgGoalsAgainst": 2.0,
+      "recentResults": [
+        "D",
+        "L",
+        "L"
+      ]
+    }
+  }
+}
